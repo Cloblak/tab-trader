@@ -242,8 +242,8 @@ print(f"decision quotes rebuilt from the 1-second raw tape: {same.mean():.1%} id
 |---|---|
 | contract | mid price (as probability), its logit, spread, minutes to close, change in mid over the last 60 s and 180 s |
 | moneyness | log(BTC / strike); the same in volatility units, z = log(S/K)/(σ√τ); Φ(z), a textbook digital price |
-| BTC momentum (1-min bars) | returns over 1/3/5/15/60 min, MACD(12,26,9) and histogram, RSI-14, Bollinger %B(20,2), 10-bar OLS slope and R², position in the 60-min range |
-| volatility | realised volatility over 15 and 60 min |
+| BTC momentum (1-min bars) | RSI-14, Stochastic %K(14), CCI(20), MACD(12,26,9) histogram, EMA 9/21 gap, Bollinger %B(20,2), 60-min z-score, position in the 60-min range, one 10-minute OLS slope and its R² |
+| volatility | Bollinger width(20), realised volatility over 15 and 60 min |
 | calendar | hour of day (sine, cosine) |
 
 None of them is tuned, and none of them is the feature set my live strategy uses.
@@ -391,83 +391,68 @@ else:
     print("set TABPFN_TOKEN (https://ux.priorlabs.ai) to run the live demo")"""),
 ])
 
-# --------------------------------------------------------------------------- 05
-write("05_tabpfn_in_my_strategy.ipynb", [
+# --------------------------------------------------------------------------- 00
+write("00_bottom_line.ipynb", [
     md("""
-# 05 · TabPFN as the filter inside my live strategy (features withheld)
+# 00 · Bottom line: TabPFN as the trade filter of my live strategy
 
-My live 15-minute strategy fires a directional signal and then asks a **gate** model whether to take
-it. The live gate is a LightGBM model trained once on spring data. Here every candidate gate scores the
-same **1,494 out-of-sample signals**. They come from three 30-day blocks between 14 July and 2 October,
-each trained on the previous 90 days.
+**This notebook uses my live strategy's real signals.** The features behind them are private and are not in this repo.
+Each model only decides which signals to take. The file `data/strategy/bluf_predictions.parquet` holds each model's
+score, its take/skip decision and the outcome, per signal.
 
-The 32 input features, the thresholds, the entry window and the exit rules are private. This file holds
-only each model's score, which trades each rule took, and the realised outcome per contract:
-`data/strategy/oos_predictions.parquet`.
+- **Train** (Apr 15 – Jul 13): models are fitted here. Train scores are out-of-fold.
+- **Test** (Jul 14 – Sep 11): used once, to calibrate each model and set its trade rule.
+- **Holdout** (Sep 12 – Oct 2): everything frozen. This is exactly the period I traded live.
+
+**Sizing:** $100 to start, and every trade stakes 15% of the current account.
+
+Every other notebook uses generic momentum indicators instead of these features.
 """),
     code(SETUP),
     code("""
-d = pd.read_parquet(ROOT / "data" / "strategy" / "oos_predictions.parquet")
-print(len(d), "signals,", d.day.nunique(), "days")
-d.head()"""),
-    md("### Which model ranks winners best? (AUC, with day-block 95% CIs vs the market price)"),
+from tabtrader import bankroll
+from tabtrader.report_data import BLUF_MODELS
+d = pd.read_parquet(ROOT / "data" / "strategy" / "bluf_predictions.parquet")
+meta = json.loads((ROOT / "data" / "strategy" / "bluf_meta.json").read_text())
+print(meta["n"]); d.head()"""),
+    md("### Account value from $100, per period"),
     code("""
-from sklearn.metrics import roc_auc_score
-from tabtrader.evaluate import day_weights
-names = {"price": "market price", "live_gate": "live gate (current)", "logistic": "logistic regression",
-         "ensemble_lr_lgbm_xgb": "LR + LightGBM + XGBoost", "mlp": "MLP", "lstm_btc_bars": "LSTM on BTC bars",
-         "lstm_bars_plus_state": "LSTM + contract state", "stack": "stack", "tabpfn": "TabPFN-3.5",
-         "tabpfn_plus_momentum": "TabPFN-3.5 + momentum summary"}
-rng = np.random.default_rng(0); days = d.day.unique()
-idx = {k: np.where(d.day.values == k)[0] for k in days}
-boots = [np.concatenate([idx[k] for k in rng.choice(days, len(days))]) for _ in range(1000)]
-y = d.won.values; pp = d.p__price.values
-rows = []
-for k, lab in names.items():
-    p = d[f"p__{k}"].values
-    diffs = [roc_auc_score(y[b], p[b]) - roc_auc_score(y[b], pp[b]) for b in boots]
-    rows.append({"model": lab, "AUC": roc_auc_score(y, p), "Δ vs price": np.mean(diffs),
-                 "lo": np.percentile(diffs, 2.5), "hi": np.percentile(diffs, 97.5)})
-auc = pd.DataFrame(rows).set_index("model").sort_values("AUC", ascending=False).round(4); auc"""),
-    md("### Trading results: each gate's trades, ¢ per contract (with the live exits), paired against the live gate"),
+NAME = {"Live gate": "My current filter", "Every signal": "Take every signal"}
+res = {sp: bankroll.run_models(d, BLUF_MODELS, sp) for sp in ["train", "test", "holdout"]}
+fig, axes = plt.subplots(1, 3, figsize=(13, 3.8))
+for ax, sp in zip(axes, res):
+    for m in BLUF_MODELS[::-1]:
+        c = pd.DataFrame(res[sp][m]["curve"], columns=["day", "v"]); c["day"] = pd.to_datetime(c["day"])
+        hi = m == "TabPFN-3.5"
+        ax.plot(c.day, c.v, color=plots.TABPFN if hi else ("#7a8594" if m == "Live gate" else plots.CLASSIC),
+                lw=2.6 if hi else (1.8 if m == "Live gate" else 1), ls="--" if m in ("Live gate", "Every signal") else "-",
+                label=NAME.get(m, m) if m in ("TabPFN-3.5", "Live gate", "Every signal") else None)
+    ax.set_title(sp.capitalize()); ax.tick_params(axis="x", rotation=30)
+axes[0].set_ylabel("account value ($)"); axes[0].legend(fontsize=8); plt.tight_layout()"""),
+    md("### Tear sheet"),
     code("""
-ex = d.net_c_exits.values
-live = d.take__live.values
-B = len(boots)
-def rule_stats(take):
-    c = ex[take].mean()
-    diffs = np.array([ex[b][take[b]].mean() - ex[b][live[b]].mean() for b in boots])
-    daily = pd.Series(ex * take, index=d.day).groupby(level=0).sum().cumsum()
-    dd = (daily - daily.cummax()).min()
-    return {"trades": int(take.sum()), "¢/ct": c, "vs live": diffs.mean(),
-            "lo": np.percentile(diffs, 2.5), "hi": np.percentile(diffs, 97.5),
-            "total ¢ (1 ct)": ex[take].sum(), "max drawdown ¢": dd}
-R = {"live gate (current)": rule_stats(live), "take every signal": rule_stats(np.ones(len(d), bool))}
-for k, lab in names.items():
-    for layer, ll in [("edge", "calibrated edge"), ("threshold", "threshold")]:
-        col = f"take__{k}__{layer}"
-        if col in d: R[f"{lab} · {ll}"] = rule_stats(d[col].values)
-res = pd.DataFrame(R).T.sort_values("¢/ct", ascending=False).round(2); res"""),
+cols = ["final", "return_pct", "sharpe", "sortino", "max_dd_pct", "trades", "win_rate", "c_per_ct", "weeks_up"]
+for sp in res:
+    t = pd.DataFrame({NAME.get(m, m): {k: res[sp][m][k] for k in cols} for m in BLUF_MODELS}).T.sort_values("final", ascending=False)
+    print(sp.upper()); display(t)"""),
+    md("### Weekly returns (%)"),
     code("""
+wk = {}
+for sp in res:
+    for m in ["TabPFN-3.5", "Live gate"]:
+        for w, v in res[sp][m]["weekly"]:
+            wk.setdefault((sp, w), {})[NAME.get(m, m)] = v
+pd.DataFrame(wk).T.round(1)"""),
+    md("### Zoom: the live period, with real Kalshi fills"),
+    code("""
+lt = pd.read_parquet(ROOT / "data" / "strategy" / "live_trades.parquet")
+days = pd.date_range(lt.day.min(), lt.day.max(), freq="D")
 fig, ax = plt.subplots(figsize=(9, 3.6))
-for lab, take, col, lw in [("live gate (current)", live, plots.INK, 1.6),
-                           ("TabPFN-3.5 · calibrated edge", d.take__tabpfn__edge.values, plots.TABPFN, 2.2),
-                           ("TabPFN-3.5 + momentum · calibrated edge", d.take__tabpfn_plus_momentum__edge.values, plots.FAST, 2.2),
-                           ("take every signal", np.ones(len(d), bool), plots.CLASSIC, 1.2)]:
-    s = pd.Series(ex * take, index=pd.to_datetime(d.day)).groupby(level=0).sum().cumsum()
-    ax.plot(s.index, s.values, color=col, lw=lw, label=lab)
-ax.set_ylabel("cumulative ¢ at 1 contract"); ax.legend(fontsize=8); ax.set_title("Out-of-sample, 14 Jul – 2 Oct")
-plt.tight_layout()"""),
-    md("""
-**Reading it honestly:**
-- TabPFN is the best *ranker* of the ten approaches I tested. Its gain over the market price alone
-  is small, and the confidence interval touches zero.
-- As a calibrated-edge gate it lifts profit per contract over the live gate, mainly by taking fewer,
-  better trades, which also shrinks drawdowns. The paired confidence intervals still include zero.
-- These blocks were also used in earlier experiments, so the next step is a forward test on data no
-  model has seen.
-
-The case for TabPFN here is that it is the strongest ranker with **no tuning**, and it refits on a CPU
-in under a minute. That makes weekly retraining cheap.
-"""),
+for lab, take, col, lw in [("live, as traded", np.ones(len(lt), bool), "#7a8594", 2.2),
+                           ("live trades TabPFN keeps", lt.tabpfn_keeps.values, plots.TABPFN, 2.6)]:
+    eq = bankroll.daily_equity(lt.day, lt.real_net_c.values, lt.px_fill.values, take, days)
+    ax.plot(eq.index, eq.values, color=col, lw=lw, label=f"{lab}: ${eq.iloc[-1]:,.2f}")
+ax.set_ylabel("account value ($)"); ax.legend(); plt.tight_layout()
+print(f"{len(lt)} live trades; TabPFN keeps {lt.tabpfn_keeps.sum()} "
+      f"(kept {lt.real_net_c[lt.tabpfn_keeps].mean():+.2f} ¢/ct vs skipped {lt.real_net_c[~lt.tabpfn_keeps].mean():+.2f} ¢/ct)")"""),
 ])

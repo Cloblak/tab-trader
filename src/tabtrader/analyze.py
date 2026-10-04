@@ -52,6 +52,8 @@ def leaderboard(df, n_tag: str, models: list[str], market: str, ref: str = REF,
         pr = load_preds(market, tags[m], m)
         if pr is not None:
             base[m] = joined(df, pr)
+    if "Market price" not in base or len(base) < 2:
+        return None
     if ref not in base:
         ref = "Market price"
     common = set.intersection(*(set(v.row_id) for v in base.values()))
@@ -135,6 +137,8 @@ def trading(df, market: str, n_tag: str, models: list[str]) -> dict:
 def thinking(df, market: str) -> dict | None:
     pr = load_preds(market, "n5000", "TabPFN-3.5-Thinking")
     if pr is None:
+        return None
+    if load_preds(market, "n5000", "Market price") is None:
         return None
     blocks_done = sorted(pr.block.unique().tolist())
     res = {"blocks": blocks_done}

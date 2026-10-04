@@ -136,11 +136,13 @@ def privacy() -> None:
             if re.search(p, txt):
                 hits.append(f"{f}: /{p[:30]}/")
     check("no secrets, hosts or private strings in tracked files", not hits, "; ".join(hits[:5]))
-    d = pd.read_parquet(ROOT / "data/strategy/oos_predictions.parquet")
-    allowed = re.compile(r"^(day|block|won|net_c_hold|net_c_exits|take__.*|p__.*)$")
-    check("strategy file holds only scores, takes and outcomes", all(allowed.match(c) for c in d.columns),
-          ",".join(c for c in d.columns if not allowed.match(c)))
-    check("strategy file has no intraday timing", d.day.str.fullmatch(r"\d{4}-\d{2}-\d{2}").all())
+    for f, pat in [("bluf_predictions", r"^(day|split|px|won|net_c_hold|net_c_exits|take__.*|p__.*)$"),
+                   ("live_trades", r"^(day|px_fill|real_net_c|tabpfn_keeps|backtest_live_gate_takes)$")]:
+        d = pd.read_parquet(ROOT / f"data/strategy/{f}.parquet")
+        allowed = re.compile(pat)
+        check(f"{f}: only scores, decisions and outcomes (no features)", all(allowed.match(c) for c in d.columns),
+              ",".join(c for c in d.columns if not allowed.match(c)))
+        check(f"{f}: no intraday timing", d.day.str.fullmatch(r"\d{4}-\d{2}-\d{2}").all())
 
 
 def sizes() -> None:

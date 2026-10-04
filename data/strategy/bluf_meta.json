@@ -1,0 +1,57 @@
+{
+ "splits": {
+  "train": [
+   "2026-04-15",
+   "2026-07-13"
+  ],
+  "test": [
+   "2026-07-14",
+   "2026-09-11"
+  ],
+  "holdout": [
+   "2026-09-12",
+   "2026-10-02"
+  ]
+ },
+ "n": {
+  "train": 2058,
+  "test": 938,
+  "holdout": 556
+ },
+ "n_features_private": 33,
+ "models": {
+  "Logistic regression": {
+   "margin_c": 0,
+   "seconds": 0.2
+  },
+  "Random forest": {
+   "margin_c": 0,
+   "seconds": 5.4
+  },
+  "XGBoost": {
+   "margin_c": 0,
+   "seconds": 44.4
+  },
+  "LightGBM": {
+   "margin_c": 3,
+   "seconds": 8.5
+  },
+  "CatBoost": {
+   "margin_c": 0,
+   "seconds": 3.7
+  },
+  "MLP": {
+   "margin_c": 1,
+   "seconds": 0.9
+  },
+  "TabPFN-3.5": {
+   "margin_c": 1,
+   "seconds": 696.5
+  },
+  "Market price": {
+   "margin_c": 2,
+   "seconds": 0.0
+  }
+ },
+ "live_trades": 345
+}
