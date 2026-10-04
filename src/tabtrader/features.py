@@ -6,8 +6,9 @@ Every feature is computed from information available at the decision instant
 * the contract's own top-of-book (now, 60 s ago, 180 s ago), and
 * 1-minute BTC closes whose bar ENDED at or before ``decision_ts``.
 
-All indicator settings are textbook defaults (RSI-14, MACD 12/26/9,
-Bollinger 20/2, ...). Nothing here is tuned.
+All indicator settings are textbook defaults (RSI-14, Stochastic-14, CCI-20,
+MACD 12/26/9, EMA 9/21, Bollinger 20/2, ...). Nothing here is tuned. The only
+trend-line feature is a single 10-minute OLS slope and its R^2.
 """
 
 from __future__ import annotations
@@ -20,10 +21,9 @@ from scipy.special import ndtr
 FEATURE_GROUPS: dict[str, list[str]] = {
     "contract": ["p_mid", "logit_mid", "spread_c", "tau_min", "d_mid_60s", "d_mid_180s"],
     "moneyness": ["log_moneyness_bps", "z_moneyness", "phi_z"],
-    "btc_momentum": ["ret_1m_bps", "ret_3m_bps", "ret_5m_bps", "ret_15m_bps", "ret_60m_bps",
-                     "macd_bps", "macd_hist_bps", "rsi_14", "bb_pctb_20",
-                     "slope_10m_bps", "r2_10m", "range_pos_60m"],
-    "volatility": ["rv_15m_bps", "rv_60m_bps"],
+    "btc_momentum": ["rsi_14", "stoch_k_14", "cci_20", "macd_hist_bps", "ema_gap_9_21_bps",
+                     "bb_pctb_20", "zscore_60m", "range_pos_60m", "slope_10m_bps", "r2_10m"],
+    "volatility": ["bb_width_20_bps", "rv_15m_bps", "rv_60m_bps"],
     "calendar": ["hour_sin", "hour_cos"],
 }
 FEATURES: list[str] = [f for g in FEATURE_GROUPS.values() for f in g]
@@ -74,17 +74,24 @@ def btc_indicators(close: pd.Series) -> pd.DataFrame:
     r = lp.diff()
     out = pd.DataFrame(index=close.index)
     out["btc"] = close
-    for k in (1, 3, 5, 15, 60):
-        out[f"ret_{k}m_bps"] = (lp - lp.shift(k)) * 1e4
-    ema12 = close.ewm(span=12, adjust=False, min_periods=12).mean()
-    ema26 = close.ewm(span=26, adjust=False, min_periods=26).mean()
-    macd = (ema12 - ema26) / close * 1e4
-    out["macd_bps"] = macd
+    ema = lambda n: close.ewm(span=n, adjust=False, min_periods=n).mean()  # noqa: E731
+    macd = (ema(12) - ema(26)) / close * 1e4
     out["macd_hist_bps"] = macd - macd.ewm(span=9, adjust=False, min_periods=9).mean()
+    out["ema_gap_9_21_bps"] = (ema(9) - ema(21)) / close * 1e4
     out["rsi_14"] = _rsi(close, 14)
-    sma = close.rolling(20, min_periods=20).mean()
+    lo14 = close.rolling(14, min_periods=14).min()
+    hi14 = close.rolling(14, min_periods=14).max()
+    out["stoch_k_14"] = (100 * (close - lo14) / (hi14 - lo14).replace(0, np.nan)).fillna(50.0)
+    sma20 = close.rolling(20, min_periods=20).mean()
+    mad20 = close.rolling(20, min_periods=20).apply(lambda w: np.abs(w - w.mean()).mean(), raw=True)
+    out["cci_20"] = ((close - sma20) / (0.015 * mad20.replace(0, np.nan))).clip(-500, 500)
+    sma = sma20
     sd = close.rolling(20, min_periods=20).std()
     out["bb_pctb_20"] = (close - (sma - 2 * sd)) / (4 * sd).replace(0, np.nan)
+    out["bb_width_20_bps"] = 4 * sd / sma * 1e4
+    m60 = close.rolling(60, min_periods=60).mean()
+    s60 = close.rolling(60, min_periods=60).std()
+    out["zscore_60m"] = ((close - m60) / s60.replace(0, np.nan)).clip(-6, 6)
     slope, r2 = _ols_slope_r2(lp, 10)
     out["slope_10m_bps"] = slope * 1e4
     out["r2_10m"] = r2

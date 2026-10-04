@@ -67,3 +67,17 @@ and the hourly validation slice is set to 750 rows so the first fit set is not s
 TabPFN-3.5 (Policy A) has lower pooled log loss than every classic model, with BH-adjusted CIs
 excluding zero for at least half of them, in at least one market. Beating the **market price**
 is a separate, harder bar, reported either way.
+
+## Amendment 2 — feature set changed (2026-10-04 ~14:20 UTC)
+
+After the first 15-minute Policy A results were computed, the author asked to replace the five
+multi-horizon BTC return features (1/3/5/15/60-minute returns) and the MACD line. The reason was privacy,
+not performance: multi-horizon trend measures sit too close to the author's private live strategy.
+They were replaced with standard non-slope indicators: Stochastic %K(14), CCI(20), EMA 9/21 gap,
+Bollinger width(20), and a 60-minute z-score. The 10-minute slope and its R² stay as the only
+trend-line features. Everything else in this protocol is unchanged, and the benchmark was rerun in full.
+
+The superseded run's summary is kept in `results/archive_v1_features/summary.json`. On the 15-minute market,
+TabPFN-3.5 had the lowest log loss of the eight learners there, and its gap to five of the six tuned classic
+models was significant after Benjamini–Hochberg. No model beat the market price. Both results are reported,
+so the reader can check that the conclusion does not depend on the feature swap.
