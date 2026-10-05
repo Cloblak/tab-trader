@@ -43,7 +43,7 @@ def rolling_block() -> list[str]:
            f"TabPFN would have kept ({int(k.sum())}) earned {lt.real_net_c[k].mean():+.2f}¢ per contract; the "
            f"{int((~k).sum())} it would have skipped earned {lt.real_net_c[~k].mean():+.2f}¢. At 15% per trade, $100 ends at "
            f"${eq(k):,.2f} with its veto against ${eq(np.ones(len(lt), bool)):,.2f} as I traded.",
-           ""]
+           "", "![Real fills with and without TabPFN's veto](docs/img/live_fills.png)", ""]
     out += bench_line_items()
     out += ["", "## The full walk-forward", "",
             f"Weekly walk-forward on my live strategy's signals, {meta['first_week']} to {meta['last_signal']}. Every "
@@ -54,7 +54,8 @@ def rolling_block() -> list[str]:
     for m, r in sorted(res.items(), key=lambda kv: -kv[1]["final"]):
         out.append(f"| {NAMES.get(m, m)} | ${r['final']:,.2f} | {r['sharpe']} | {r['max_dd_pct']}% | {r['trades']} | "
                    f"{r['c_per_ct']:+.2f} |")
-    out += ["", f"July decided this table. My signal lost {abs(jul.net_c_exits.mean()):.2f}¢ per contract that month, and "
+    out += ["", "![Weekly walk-forward equity curves and monthly results](docs/img/walkforward.png)", "",
+            f"July decided this table. My signal lost {abs(jul.net_c_exits.mean()):.2f}¢ per contract that month, and "
             f"TabPFN, still learning from April to June, took {int(tj.sum())} of {len(jul)} signals at "
             f"{jul.net_c_exits[tj].mean():+.2f}¢ each. At a flat 15% stake no filter survived it intact; half-Kelly sizing, "
             "which bets less when the edge is thin, is what kept accounts alive.", "",
@@ -81,13 +82,153 @@ def bench_line_items() -> list[str]:
             f"({'; '.join(bits)}). No model beats the market price itself on prediction error."]
 
 
+def _put(s: str, tag: str, block: str) -> str:
+    return re.sub(rf"<!-- {tag}:START -->.*<!-- {tag}:END -->",
+                  lambda _: f"<!-- {tag}:START -->\n{block}\n<!-- {tag}:END -->", s, flags=re.S)
+
+
 def main() -> None:
+    figures()
     p = ROOT / "README.md"
-    block = "\n".join(rolling_block())
     s = p.read_text()
-    p.write_text(re.sub(r"<!-- RESULTS:START -->.*<!-- RESULTS:END -->",
-                        lambda _: "<!-- RESULTS:START -->\n" + block + "\n<!-- RESULTS:END -->", s, flags=re.S))
-    print("README results block updated")
+    s = _put(s, "DATA", "\n".join(data_block()))
+    s = _put(s, "RESULTS", "\n".join(rolling_block()))
+    p.write_text(s)
+    print("README data + results blocks and docs/img figures updated")
+
+
+
+# ---------------------------------------------------------------- data section
+def data_block() -> list[str]:
+    from sklearn.metrics import roc_auc_score
+
+    from . import eda
+
+    t = eda.eda_tables()
+    v = eda.volume_totals(t)
+    w = eda.weekly_quality(t)
+    q15 = w[w.market == "15-minute"]
+    pre, post = q15[q15.week < "2026-07-27"], q15[q15.week >= "2026-08-03"]
+    hc = eda.candle_agreement("1h").set_index("month")
+    total = (v["tape_15m_rows"] + v["tape_1h_rows"] + v["order_book_rows"] + v["spot_venue_rows"]
+             + v["indicator_rows"] + v["brti_rows"])
+    d = pd.read_parquet(DATA / "strategy" / "rolling_predictions.parquet")
+    lt = pd.read_parquet(DATA / "strategy" / "rolling_live_trades.parquet")
+    auc_px = roc_auc_score(d.won, d.px)
+    return [
+        "## Why this is a real test",
+        "",
+        "Nothing here is a benchmark download. Every row was recorded by my own collectors while the markets traded, "
+        "and my strategy trades on it with real money.",
+        "",
+        f"- **Real.** {total / 1e6:,.0f} million rows since {v['first_day']}: quotes four times a second, the full order book, "
+        f"spot prices from four exchanges and the settlement index. Kalshi keeps only about two months of history, so most "
+        f"of this exists nowhere else. Since {lt.day.min()} the strategy has traded it with real money: {len(lt)} trades "
+        "with real fills and fees.",
+        f"- **Messy.** Before a collector rewrite on 30 July only {100 * pre.valid.sum() / pre.rows.sum():.0f}% of quotes were "
+        f"clean, and {100 * pre.crossed.sum() / pre.rows.sum():.0f}% of rows showed impossible crossed books (after it: "
+        f"{100 * post.valid.sum() / post.rows.sum():.0f}% clean, none crossed). In July only "
+        f"{hc.loc['2026-07', 'confirmed_pct']:.0f}% of the hourly ladder's recorded quotes matched the exchange's own records. "
+        "There are outages, stale quotes and a regime change mid-sample. Every price used here is checked against Kalshi's "
+        "candles.",
+        f"- **Small and noisy.** My strategy produced {len(d):,} usable signals in five months, and only a few hundred per "
+        f"regime. Signals win about {100 * d.won.mean():.0f}% of the time and the market price alone already ranks them at "
+        f"AUC {auc_px:.3f}, so there is little left for any model to find.",
+        "- **Honest labels, fast.** Every contract settles at $1 or $0 within 15 minutes, so every prediction is scored "
+        "against reality, and the market price is a strong baseline to beat.",
+        "",
+        "Small, noisy, drifting tables with a hard baseline are the setting TabPFN was built for. "
+        "No synthetic data, no cleaned-up competition set.",
+        "",
+    ]
+
+
+# --------------------------------------------------------------------- figures
+def figures() -> None:
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.dates as mdates
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import FuncFormatter
+
+    NAVY, STEEL, GRAY, MID, LIGHT, INK = "#1d3a6e", "#5a8fd4", "#4b5563", "#7a8594", "#b4bcc7", "#1b2533"
+    plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 9.5, "axes.spines.top": False,
+                         "axes.spines.right": False, "axes.edgecolor": MID, "xtick.color": GRAY, "ytick.color": GRAY,
+                         "axes.grid": True, "grid.color": "#e6e9ee", "grid.linewidth": 0.8,
+                         "axes.axisbelow": True})
+    out = ROOT / "docs" / "img"
+    out.mkdir(parents=True, exist_ok=True)
+    money = FuncFormatter(lambda x, _: f"${x:,.0f}" if x >= 1 else f"${x:.2f}")
+
+    # 1. walk-forward equity + monthly cents per contract
+    d = pd.read_parquet(DATA / "strategy" / "rolling_predictions.parquet")
+    res = bankroll.run_models(d, ROLL_MODELS)
+    lines = [("TabPFN-3.5 + Kelly", "TabPFN-3.5, half-Kelly", NAVY, 2.6, "-"),
+             ("TabPFN-3.5", "TabPFN-3.5, flat 15%", STEEL, 1.8, "-"),
+             ("Logistic regression + Kelly", "Logistic regression, half-Kelly", GRAY, 1.6, "-"),
+             ("Live gate", "My current filter", MID, 1.6, "--"),
+             ("Every signal", "Take every signal", LIGHT, 1.4, ":")]
+    fig, (ax, bx) = plt.subplots(2, 1, figsize=(10, 6.4), sharex=True, gridspec_kw={"height_ratios": [2.3, 1]})
+    for lo, hi, lab, col in [("2026-07-01", "2026-08-01", "July: the signal breaks down", "#a83232"),
+                             ("2026-09-12", "2026-10-03", "live trading", NAVY)]:
+        for a_ in (ax, bx):
+            a_.axvspan(pd.Timestamp(lo), pd.Timestamp(hi), color=col, alpha=0.07, lw=0)
+        ax.text(pd.Timestamp(lo) + pd.Timedelta(days=1), 2.2e5, lab, color=col, fontsize=8.5, va="top")
+    handles = {}
+    for key, lab, col, lw, ls in lines[::-1]:  # draw TabPFN last so it sits on top
+        c = pd.DataFrame(res[key]["curve"], columns=["day", "v"])
+        c["day"] = pd.to_datetime(c["day"])
+        end = c.v.iloc[-1]
+        handles[key], = ax.plot(c.day, c.v, color=col, lw=lw, ls=ls,
+                                label=f"{lab}  (${end:,.0f})" if end >= 1 else f"{lab}  (${end:.2f})")
+    ax.set_yscale("log")
+    ax.set_ylim(0.005, 3e5)
+    ax.yaxis.set_major_formatter(money)
+    ax.axhline(100, color=INK, lw=0.8, alpha=0.5)
+    ax.set_ylabel("account value, $100 start (log)")
+    ax.legend(handles=[handles[k] for k, *_ in lines], loc="lower left", fontsize=8.3, frameon=False)
+    ax.set_xlim(pd.Timestamp("2026-05-08"), pd.Timestamp("2026-10-18"))
+    bx.xaxis.set_major_locator(mdates.MonthLocator())
+    bx.xaxis.set_major_formatter(mdates.DateFormatter("%b"))
+    ax.set_title("Weekly walk-forward on my live strategy's signals (each model refit every Monday)",
+                 loc="left", fontsize=10.5, color=INK)
+    d["month"] = pd.to_datetime(d["day"]).dt.to_period("M").dt.to_timestamp()
+    mo = d.groupby("month").apply(lambda g: pd.Series({
+        "all": g.net_c_exits.mean(), "tab": g.net_c_exits[g["take__TabPFN-3.5"]].mean()}), include_groups=False)
+    x = mo.index + pd.Timedelta(days=15)
+    bx.bar(x - pd.Timedelta(days=4), mo["all"], width=8, color=LIGHT, label="every signal")
+    bx.bar(x + pd.Timedelta(days=4), mo["tab"], width=8, color=NAVY, label="signals TabPFN took")
+    bx.axhline(0, color=INK, lw=0.8)
+    bx.set_ylabel("¢ per contract")
+    bx.legend(loc="upper left", fontsize=8.3, frameon=False, ncol=2)
+    fig.tight_layout()
+    fig.savefig(out / "walkforward.png", dpi=150)
+    plt.close(fig)
+
+    # 2. live period, real fills
+    lt = pd.read_parquet(DATA / "strategy" / "rolling_live_trades.parquet")
+    days = pd.date_range(lt.day.min(), lt.day.max())
+    k = lt.tabpfn_keeps.to_numpy()
+    fig, ax = plt.subplots(figsize=(10, 3.4))
+    for lab, take, frac, col, lw in [("As I traded (flat 15%)", np.ones(len(lt), bool), bankroll.RISK, MID, 2.0),
+                                     ("With TabPFN's veto, flat 15%", k, bankroll.RISK, NAVY, 2.6),
+                                     ("With TabPFN's veto, half-Kelly", k, lt.frac_kelly.to_numpy(), STEEL, 1.8)]:
+        eq = bankroll.daily_equity(lt.day, lt.real_net_c.to_numpy(), lt.px_fill.to_numpy(), take, days, risk=frac)
+        ax.plot(eq.index, eq.values, color=col, lw=lw, label=f"{lab}  (${eq.iloc[-1]:,.0f})")
+    ax.axhline(100, color=INK, lw=0.8, alpha=0.5)
+    ax.yaxis.set_major_formatter(money)
+    ax.set_ylabel("account value")
+    ax.xaxis.set_major_locator(mdates.DayLocator(interval=3))
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
+    last = days[-1]
+    ax.annotate("one bad day (Oct 2)", xy=(last, 330), xytext=(last - pd.Timedelta(days=4.5), 160),
+                fontsize=8.3, color=GRAY, arrowprops={"arrowstyle": "->", "color": GRAY, "lw": 0.8})
+    ax.set_title(f"Real Kalshi fills: my {len(lt)} live trades since {lt.day.min()}", loc="left", fontsize=10.5, color=INK)
+    ax.legend(loc="upper left", fontsize=8.3, frameon=False)
+    fig.tight_layout()
+    fig.savefig(out / "live_fills.png", dpi=150)
+    plt.close(fig)
 
 
 if __name__ == "__main__":

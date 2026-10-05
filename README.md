@@ -3,13 +3,30 @@
 **TabPFN-3.5 deciding which Kalshi 15-minute Bitcoin trades to take, on real, messy, self-recorded market data.**
 One CPU, no training loop, no hyper-parameter tuning.
 
-Interactive report: https://cloblak.github.io/tab-trader/
+**Interactive report:** [open it here](https://htmlpreview.github.io/?https://github.com/Cloblak/tab-trader/blob/main/docs/index.html)
+(source: [`docs/index.html`](docs/index.html))
+
+<!-- DATA:START -->
+## Why this is a real test
+
+Nothing here is a benchmark download. Every row was recorded by my own collectors while the markets traded, and my strategy trades on it with real money.
+
+- **Real.** 245 million rows since 2026-03-21: quotes four times a second, the full order book, spot prices from four exchanges and the settlement index. Kalshi keeps only about two months of history, so most of this exists nowhere else. Since 2026-09-12 the strategy has traded it with real money: 345 trades with real fills and fees.
+- **Messy.** Before a collector rewrite on 30 July only 60% of quotes were clean, and 3% of rows showed impossible crossed books (after it: 96% clean, none crossed). In July only 16% of the hourly ladder's recorded quotes matched the exchange's own records. There are outages, stale quotes and a regime change mid-sample. Every price used here is checked against Kalshi's candles.
+- **Small and noisy.** My strategy produced 2,831 usable signals in five months, and only a few hundred per regime. Signals win about 77% of the time and the market price alone already ranks them at AUC 0.729, so there is little left for any model to find.
+- **Honest labels, fast.** Every contract settles at $1 or $0 within 15 minutes, so every prediction is scored against reality, and the market price is a strong baseline to beat.
+
+Small, noisy, drifting tables with a hard baseline are the setting TabPFN was built for. No synthetic data, no cleaned-up competition set.
+
+<!-- DATA:END -->
 
 <!-- RESULTS:START -->
 ## What TabPFN does well here
 
 - **It ranks my live strategy's signals best.** In a weekly walk-forward (21 weeks, 2,831 signals, each week refit on the previous 12), TabPFN-3.5 separates winners from losers with AUC 0.731, against 0.726 for logistic regression and 0.689 for LightGBM. No tuning.
 - **Its veto works on real fills.** On my 345 actual live trades since 2026-09-12, the trades TabPFN would have kept (149) earned +5.91¢ per contract; the 196 it would have skipped earned +0.25¢. At 15% per trade, $100 ends at $455.40 with its veto against $336.57 as I traded.
+
+![Real fills with and without TabPFN's veto](docs/img/live_fills.png)
 
 - **It is at or near the top on public data.** With generic indicators that anyone can rerun from this repo (15-minute up/down: TabPFN-3.5 ranks #2 of 8 on prediction error and is significantly better than 5 of 6 tuned classic models; hourly strike ladder: TabPFN-3.5 ranks #1 of 8 on prediction error and is significantly better than 1 of 6 tuned classic models). No model beats the market price itself on prediction error.
 
@@ -27,6 +44,8 @@ Weekly walk-forward on my live strategy's signals, 2026-05-11 to 2026-10-02. Eve
 | **TabPFN-3.5**, flat 15% | $15.13 | 1.87 | -99.9% | 1555 | +1.45 |
 | LightGBM, flat 15% | $3.71 | 1.53 | -100.0% | 2223 | +0.89 |
 | Take every signal, flat 15% | $0.27 | 1.81 | -100.0% | 2831 | +0.73 |
+
+![Weekly walk-forward equity curves and monthly results](docs/img/walkforward.png)
 
 July decided this table. My signal lost 4.65¢ per contract that month, and TabPFN, still learning from April to June, took 173 of 382 signals at -5.60¢ each. At a flat 15% stake no filter survived it intact; half-Kelly sizing, which bets less when the edge is thin, is what kept accounts alive.
 
