@@ -1,0 +1,23 @@
+{
+ "model": "Random forest \u00b7 tuned",
+ "n_fit": 6998,
+ "n_val": 1250,
+ "n_test": 951,
+ "params": {
+  "n_estimators": 200,
+  "min_samples_leaf": 100,
+  "max_features": "sqrt",
+  "max_depth": 10
+ },
+ "search_s": 5.020688156597316,
+ "fit_s": 0.5919999498873949,
+ "predict_s": 0.13508456852287054,
+ "predict_rows": 2201,
+ "block": 2,
+ "block_start": "2026-08-17 00:00:00+00:00",
+ "block_end": "2026-08-24 00:00:00+00:00",
+ "fit_from": "2026-06-07 23:50:00+00:00",
+ "fit_to": "2026-08-09 07:50:00+00:00",
+ "val_to": "2026-08-16 23:40:00+00:00",
+ "wall_s": 5.753145449794829
+}

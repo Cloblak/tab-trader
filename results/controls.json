@@ -1,0 +1,69 @@
+{
+ "planted_corr_with_residual": 0.311,
+ "planted": {
+  "Market price": {
+   "logloss": 0.45642,
+   "minus_market": null
+  },
+  "Logistic regression \u00b7 default": {
+   "logloss": 0.41505,
+   "minus_market": {
+    "mean": -0.0413716812632359,
+    "lo": -0.05227022685485885,
+    "hi": -0.030344799001975276,
+    "p": 0.0005
+   }
+  },
+  "LightGBM \u00b7 default": {
+   "logloss": 0.44497,
+   "minus_market": {
+    "mean": -0.011447384593474906,
+    "lo": -0.02699315702614247,
+    "hi": 0.004152169709474159,
+    "p": 0.151
+   }
+  },
+  "TabPFN-3.5": {
+   "logloss": 0.41478,
+   "minus_market": {
+    "mean": -0.04164255819786464,
+    "lo": -0.05243174591776728,
+    "hi": -0.030705112514512394,
+    "p": 0.0005
+   }
+  }
+ },
+ "null": {
+  "Market price": {
+   "logloss": 0.47494,
+   "minus_market": null
+  },
+  "Logistic regression \u00b7 default": {
+   "logloss": 0.47946,
+   "minus_market": {
+    "mean": 0.004516275035625647,
+    "lo": 0.0023987783785857455,
+    "hi": 0.006519575928861289,
+    "p": 0.0005
+   }
+  },
+  "LightGBM \u00b7 default": {
+   "logloss": 0.51878,
+   "minus_market": {
+    "mean": 0.04383483073434227,
+    "lo": 0.03227416131812126,
+    "hi": 0.05522769713312892,
+    "p": 0.0005
+   }
+  },
+  "TabPFN-3.5": {
+   "logloss": 0.48023,
+   "minus_market": {
+    "mean": 0.005294477088059601,
+    "lo": 0.002961560865258031,
+    "hi": 0.007651351257001358,
+    "p": 0.0005
+   }
+  }
+ }
+}

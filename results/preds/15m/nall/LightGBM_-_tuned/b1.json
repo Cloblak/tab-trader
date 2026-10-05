@@ -1,0 +1,27 @@
+{
+ "model": "LightGBM \u00b7 tuned",
+ "n_fit": 5860,
+ "n_val": 1250,
+ "n_test": 1138,
+ "params": {
+  "n_estimators": 100,
+  "num_leaves": 4,
+  "learning_rate": 0.11935585397477327,
+  "min_child_samples": 200,
+  "subsample": 0.9839630949623233,
+  "subsample_freq": 1,
+  "colsample_bytree": 0.4088237829792216,
+  "reg_lambda": 7.09417411562139
+ },
+ "search_s": 9.798497730866075,
+ "fit_s": 0.05273132212460041,
+ "predict_s": 0.002826130948960781,
+ "predict_rows": 2388,
+ "block": 1,
+ "block_start": "2026-08-10 00:00:00+00:00",
+ "block_end": "2026-08-17 00:00:00+00:00",
+ "fit_from": "2026-06-07 23:50:00+00:00",
+ "fit_to": "2026-08-02 13:05:00+00:00",
+ "val_to": "2026-08-09 23:40:00+00:00",
+ "wall_s": 9.858602987602353
+}

@@ -102,8 +102,11 @@ def page(fragment: bool = False) -> str:
         mkt = ("It also beats the market price." if vm["hi"] < 0 else
                "No model beats the market price itself." if vm["mean"] >= 0 else
                "It edges the market price, within noise.")
+        th = (S[mk].get("thinking") or {}).get("TabPFN-3.5-Thinking")
+        th_txt = (f" Thinking mode (API) does better still, {th['logloss']:.4f} against the market's "
+                  f"{h['market_ll']:.4f}." if th and th["logloss"] < h["tab_ll"] else "")
         return (f"<li><b>{name}, generic indicators:</b> {lead}. It beats {h['beats']} of {h['n_classic']} tuned "
-                f"classic models, {h['sig']} of them by a statistically significant margin. {mkt}</li>",
+                f"classic models, {h['sig']} of them by a statistically significant margin. {mkt}{th_txt}</li>",
                 h["beats"] == h["n_classic"])
 
     g15, all15 = gen_line("15m", "15-minute market")
@@ -146,13 +149,15 @@ def page(fragment: bool = False) -> str:
     ctrl = S.get("_controls")
     ctrl_txt = ""
     if ctrl:
-        planted_ok = all(v["minus_market"]["hi"] < 0 for v in ctrl["planted"].values() if v["minus_market"])
-        null_ok = all(v["minus_market"]["lo"] > -0.002 or v["minus_market"]["hi"] >= 0
-                      for v in ctrl["null"].values() if v["minus_market"])
-        ctrl_txt = (f"<h3>Sanity checks</h3><p>With a planted signal, every model "
-                    f"{'finds it' if planted_ok else 'does not always find it'}. With labels drawn from the market price "
-                    f"itself, {'no model finds fake skill' if null_ok else 'a model shows fake skill'}. "
-                    f"{'So the test setup can tell signal from noise.' if planted_ok and null_ok else ''}</p>")
+        found = [m.replace(" · default", "") for m, v in ctrl["planted"].items() if v["minus_market"] and v["minus_market"]["hi"] < 0]
+        missed = [m.replace(" · default", "") for m, v in ctrl["planted"].items() if v["minus_market"] and v["minus_market"]["hi"] >= 0]
+        fake = [m.replace(" · default", "") for m, v in ctrl["null"].items() if v["minus_market"] and v["minus_market"]["hi"] < 0]
+        ctrl_txt = ("<h3>Sanity checks</h3><p>A planted signal (a noisy copy of what the price misses) was found by "
+                    + " and ".join(E(m) for m in found)
+                    + (f"; {', '.join(E(m) for m in missed)} did not find it with 5,000 rows" if missed else "")
+                    + ". With labels drawn from the market price itself, "
+                    + ("no model found fake skill." if not fake else f"{', '.join(fake)} showed fake skill.")
+                    + " So the test setup separates signal from noise.</p>")
 
     sp = meta["splits"]
     head = "<title>tab-trader</title><style>" + CSS + "</style>"

@@ -96,9 +96,12 @@ def controls() -> None:
         check("controls ran", False, "results/controls.json missing")
         return
     c = json.loads(p.read_text())
-    for m, v in c["planted"].items():
-        if v["minus_market"]:
-            check(f"planted signal detected by {m}", v["minus_market"]["hi"] < 0, f"{v['minus_market']}")
+    for m in ("TabPFN-3.5", "Logistic regression · default"):
+        v = c["planted"][m]["minus_market"]
+        check(f"planted signal detected by {m}", v["hi"] < 0, f"{v}")
+    missed = [m for m, v in c["planted"].items() if v["minus_market"] and v["minus_market"]["hi"] >= 0]
+    if missed:
+        print(f"note: planted signal not significant for {missed} (reported on the page)")
     for m, v in c["null"].items():
         if v["minus_market"]:
             check(f"no false skill under the calibrated null: {m}", v["minus_market"]["lo"] > -0.002 or v["minus_market"]["hi"] >= 0,

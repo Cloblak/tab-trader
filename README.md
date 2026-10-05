@@ -31,9 +31,33 @@ Staking 15% per trade compounds very fast. Read the dollar figures as a comparis
 
 **Public benchmark (generic momentum indicators).** Lower log loss is better. Every model gets the same 5,000 rows; classic models are tuned, TabPFN is not.
 
-*KXBTC15M · 15-minute up/down: still running.*
+*KXBTC15M · 15-minute up/down: 9,686 test predictions over 62 days*
 
-*KXBTCD · hourly strike ladder: still running.*
+| Model | Log loss | vs TabPFN-3.5 | Significant |
+|---|---|---|---|
+| Market price | 0.4745 | -0.0024 | yes |
+| Logistic regression | 0.4763 | -0.0005 | no |
+| **TabPFN-3.5** | 0.4768 | reference |  |
+| **TabPFN-3.5-Fast** | 0.4771 | +0.0002 | no |
+| Random forest | 0.4815 | +0.0046 | yes |
+| CatBoost | 0.4816 | +0.0048 | yes |
+| XGBoost | 0.4819 | +0.0050 | yes |
+| MLP | 0.4834 | +0.0066 | yes |
+| LightGBM | 0.4845 | +0.0077 | yes |
+
+*KXBTCD · hourly strike ladder: 4,790 test predictions over 41 days*
+
+| Model | Log loss | vs TabPFN-3.5 | Significant |
+|---|---|---|---|
+| Market price | 0.5395 | -0.0047 | no |
+| **TabPFN-3.5** | 0.5442 | reference |  |
+| Logistic regression | 0.5452 | +0.0010 | no |
+| Random forest | 0.5456 | +0.0014 | no |
+| LightGBM | 0.5458 | +0.0017 | no |
+| MLP | 0.5464 | +0.0022 | no |
+| CatBoost | 0.5486 | +0.0044 | no |
+| XGBoost | 0.5512 | +0.0070 | yes |
+| **TabPFN-3.5-Fast** | 0.5522 | +0.0080 | yes |
 
 <!-- RESULTS:END -->
 
