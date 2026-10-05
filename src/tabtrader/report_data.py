@@ -172,3 +172,38 @@ def headline(S: dict) -> dict:
     return out
 
 
+
+
+ROLL_MODELS = ["TabPFN-3.5", "TabPFN-3.5 + Kelly", "Logistic regression + Kelly", "Live gate", "Every signal",
+               "Logistic regression", "LightGBM", "LightGBM + Kelly"]
+ROLL_EXTRA = ["TabPFN-3.5 · calibrated", "Logistic regression · calibrated", "LightGBM · calibrated"]
+
+
+def rolling_data() -> dict:
+    """Weekly walk-forward of every filter on the live strategy's signals (PREREG amendment 3)."""
+    d = pd.read_parquet(DATA / "strategy" / "rolling_predictions.parquet")
+    meta = json.loads((DATA / "strategy" / "rolling_meta.json").read_text())
+    res = bankroll.run_models(d, ROLL_MODELS + [m for m in ROLL_EXTRA if f"take__{m}" in d])
+    auc = {m: r(roc_auc_score(d.won, d[f"p__{m}"]), 4) for m in ("TabPFN-3.5", "Logistic regression", "LightGBM")}
+    d["month"] = d["day"].str[:7]
+    monthly = []
+    for mo, g in d.groupby("month"):
+        row = {"month": mo, "signals": int(len(g))}
+        for m in ("Every signal", "TabPFN-3.5", "Live gate"):
+            t = g[f"take__{m}"].to_numpy(bool)
+            row[m] = {"c": r(g.net_c_exits[t].mean(), 2) if t.any() else None, "n": int(t.sum())}
+        monthly.append(row)
+    lt = pd.read_parquet(DATA / "strategy" / "rolling_live_trades.parquet")
+    days = pd.date_range(lt.day.min(), lt.day.max(), freq="D")
+    k = lt.tabpfn_keeps.to_numpy()
+    series = {}
+    for name, take, frac in [("Live, as traded (real fills)", np.ones(len(lt), bool), bankroll.RISK),
+                             ("TabPFN veto, flat 15% (real fills)", k, bankroll.RISK),
+                             ("TabPFN veto + half-Kelly (real fills)", k, lt.frac_kelly.to_numpy())]:
+        eq = bankroll.daily_equity(lt.day, lt.real_net_c.to_numpy(), lt.px_fill.to_numpy(), take, days, risk=frac)
+        ts = bankroll.tear_sheet(eq, int(take.sum()), int((lt.real_net_c.to_numpy()[take] > 0).sum()))
+        ts["curve"] = [[str(x.date()), round(float(v), 2)] for x, v in eq.items()]
+        series[name] = ts
+    live = {"series": series, "n": int(len(lt)), "kept": int(k.sum()), "kept_c": r(lt.real_net_c[k].mean(), 2),
+            "skipped_c": r(lt.real_net_c[~k].mean(), 2), "first": str(lt.day.min()), "last": str(lt.day.max())}
+    return {"meta": meta, "res": res, "auc": auc, "monthly": monthly, "live": live}

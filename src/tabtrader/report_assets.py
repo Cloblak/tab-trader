@@ -157,32 +157,27 @@ function bars(host,cats,series,o={}){
   const fig=host2fig(host);
   cats.forEach((c,i)=>{const gx=L+i*bw+bw*0.11;series.forEach((s,j)=>{const v=s.v[i];if(v==null)return;const x=gx+j*gw;const y=Y(Math.max(v,0)),h=Math.abs(Y(v)-Y(0));
       el('rect',{x:x+0.5,y,width:Math.max(gw-1,1),height:Math.max(h,0.5),fill:s.color},svg);});
-    if(i%(o.labelEvery||1)===0)txt(svg,L+i*bw+bw/2,H-B+14,c.slice(5),'tick','middle');
+    if(i%(o.labelEvery||1)===0)txt(svg,L+i*bw+bw/2,H-B+14,o.catfmt?o.catfmt(c):c.slice(5),'tick','middle');
     const hb=el('rect',{x:L+i*bw,y:T,width:bw,height:H-T-B,class:'hit'},svg);
-    hb.addEventListener('pointermove',e=>showTip(fig,`<div class="meta">week ending ${c}</div>`+series.map(s=>`<div><span style="color:${s.color}">■</span> ${s.name}: <b>${s.v[i]==null?'–':sgn(s.v[i],1)+'%'}</b></div>`).join(''),e));hb.addEventListener('pointerleave',()=>hideTip(fig));});
+    hb.addEventListener('pointermove',e=>showTip(fig,`<div class="meta">${o.catfmt?o.catfmt(c):'week ending '+c}</div>`+series.map(s=>`<div><span style="color:${s.color}">■</span> ${s.name}: <b>${s.v[i]==null?'–':sgn(s.v[i],1)+(o.unit||'%')}</b></div>`).join(''),e));hb.addEventListener('pointerleave',()=>hideTip(fig));});
 }
 function seg(host,options,value,onChange){host.innerHTML='';host.className='seg';options.forEach(([v,l])=>{const b=document.createElement('button');b.type='button';b.textContent=l;b.setAttribute('aria-pressed',String(v===value));b.onclick=()=>{[...host.children].forEach(c=>c.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');onChange(v);};host.appendChild(b);});}
 function legendHTML(models){return models.map(m=>{const s=STYLE[m]||{c:'var(--classic)'};return `<span><i style="border-top-color:${s.c};border-top-style:${s.d?'dashed':'solid'}"></i>${NAME(m)}</span>`;}).join('');}
 
-/* ===== bottom line: real strategy ===== */
-const BL=D.bluf, MODELS=D.blufModels;
-function eqSeries(sp){return MODELS.map(m=>{const s=STYLE[m]||{c:'var(--classic)',w:1.1};return {name:NAME(m),color:s.c,width:s.w,dash:s.d||'',pts:BL.splits[sp][m].curve,opacity:STYLE[m]?1:.9};}).reverse();}
-const short=v=>v>=1e6?'$'+v/1e6+'M':v>=1e3?'$'+v/1e3+'k':v>=1?'$'+v:'$'+v;
-['train','test','holdout'].forEach(sp=>lineChart(document.getElementById('eq-'+sp),eqSeries(sp),{x:'time',w:400,h:270,left:52,ylog:true,yfmt:short,tipfmt:money,label:'account value, '+sp}));
-document.getElementById('eq-legend').innerHTML=legendHTML(['TabPFN-3.5 + Kelly','TabPFN-3.5','Live gate','Every signal','Market price'])+'<span><i style="border-top-color:var(--classic)"></i>six other ML models (hover for names)</span>';
-(function(){const host=document.getElementById('ts-table'),ctl=document.getElementById('ts-split');
-  function draw(sp){const S=BL.splits[sp];const rows=MODELS.map(m=>({m,...S[m]})).sort((a,b)=>b.final-a.final);
-    host.innerHTML=`<table><thead><tr><th>Trade filter</th><th>$100 becomes</th><th>Return</th><th>Sharpe</th><th>Sortino</th><th>Max drawdown</th><th>Trades</th><th>Win rate</th><th>¢ / contract</th><th>Weeks up</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.m.startsWith('TabPFN')?'tab':r.m==='Market price'?'mkt':''}"><td>${NAME(r.m)}</td><td class="num">${money(r.final)}</td><td class="num ${r.return_pct<0?'neg':''}">${sgn(r.return_pct,1)}%</td><td class="num">${fmt(r.sharpe,2)}</td><td class="num">${fmt(r.sortino,2)}</td><td class="num">${fmt(r.max_dd_pct,1)}%</td><td class="num">${r.trades}</td><td class="num">${r.win_rate==null?'–':fmt(100*r.win_rate,1)+'%'}</td><td class="num">${sgn(r.c_per_ct,2)}</td><td class="num">${r.weeks_up}</td></tr>`).join('')}</tbody></table>`;}
-  seg(ctl,[['train','Train'],['test','Test'],['holdout','Holdout (live period)']],'holdout',draw);draw('holdout');})();
-(function(){const pick=['TabPFN-3.5 + Kelly','Live gate'];const weeks=[];const bands=[];
-  ['train','test','holdout'].forEach(sp=>{const w=BL.splits[sp]['TabPFN-3.5 + Kelly'].weekly.map(x=>x[0]);bands.push({from:weeks.length,to:weeks.length+w.length,label:{train:'Train',test:'Test',holdout:'Holdout'}[sp],fill:sp==='holdout'?'rgba(29,58,110,.09)':sp==='test'?'rgba(29,58,110,.045)':'rgba(29,58,110,0)'});weeks.push(...w.map(x=>[sp,x]));});
-  const ser=pick.map(m=>({name:NAME(m),color:m.startsWith('TabPFN')?'var(--c1)':'var(--classic)',v:weeks.map(([sp,wk])=>{const r=BL.splits[sp][m].weekly.find(x=>x[0]===wk);return r?r[1]:null;})}));
-  bars(document.getElementById('wk-bars'),weeks.map(x=>x[1]),ser,{yfmt:a=>a+'%',labelEvery:3,bands,label:'weekly returns'});})();
-(function(){const L=BL.live.series;const order=['TabPFN + Kelly (backtest)','Live gate (backtest)','TabPFN veto, flat 15% (real fills)','Live, as traded (real fills)','TabPFN veto + Kelly sizing (real fills)'];
-  const sty={'TabPFN + Kelly (backtest)':{c:'var(--c2)',w:1.8,d:'6 3'},'Live gate (backtest)':{c:'var(--classic)',w:1.6,d:'6 3'},'TabPFN veto, flat 15% (real fills)':{c:'var(--c2)',w:2.2},'Live, as traded (real fills)':{c:'var(--gray)',w:2.4},'TabPFN veto + Kelly sizing (real fills)':{c:'var(--c1)',w:3}};
-  const ks=order.filter(k=>L[k]);
-  lineChart(document.getElementById('live-chart'),ks.map(k=>({name:k,color:sty[k].c,width:sty[k].w,dash:sty[k].d||'',pts:L[k].curve})),{x:'time',xstep:3,ylog:true,yfmt:short,tipfmt:money,h:300,ylabel:'account value (log scale)',label:'live period'});
-  document.getElementById('live-legend').innerHTML=ks.map(k=>`<span><i style="border-top-color:${sty[k].c};border-top-style:${sty[k].d?'dashed':'solid'}"></i>${k}</span>`).join('');})();
+/* ===== the strategy: rolling walk-forward ===== */
+const RO=D.roll;
+const RSTYLE={'TabPFN-3.5':{c:'var(--c1)',w:3},'TabPFN-3.5 + Kelly':{c:'var(--c2)',w:2.4},'Logistic regression + Kelly':{c:'var(--gray)',w:2.2},'Live gate':{c:'var(--gray)',w:1.8,d:'7 4'},'Every signal':{c:'var(--classic)',w:1.6,d:'3 3'}};
+const RNAME=m=>({'TabPFN-3.5':'TabPFN-3.5, flat 15%','TabPFN-3.5 + Kelly':'TabPFN-3.5, half-Kelly','Logistic regression + Kelly':'Logistic regression, half-Kelly','Logistic regression':'Logistic regression, flat 15%','LightGBM':'LightGBM, flat 15%','LightGBM + Kelly':'LightGBM, half-Kelly','Live gate':'My current filter (frozen)','Every signal':'Take every signal'})[m]||m;
+(function(){const ms=D.rollModels;
+  lineChart(document.getElementById('eq-roll'),ms.slice().reverse().map(m=>{const s=RSTYLE[m]||{c:'var(--classic)',w:1.2};return {name:RNAME(m),color:s.c,width:s.w,dash:s.d||'',pts:RO.res[m].curve};}),{x:'time',ylog:true,yfmt:v=>v>=1e6?'$'+v/1e6+'M':v>=1e3?'$'+v/1e3+'k':'$'+v,tipfmt:money,h:320,ylabel:'account value (log scale)',label:'rolling walk-forward equity'});
+  document.getElementById('eq-legend').innerHTML=ms.filter(m=>RSTYLE[m]).map(m=>{const s=RSTYLE[m];return `<span><i style="border-top-color:${s.c};border-top-style:${s.d?'dashed':'solid'}"></i>${RNAME(m)}</span>`;}).join('')+'<span><i style="border-top-color:var(--classic)"></i>other models (hover)</span>';
+  const rows=Object.entries(RO.res).map(([m,r])=>({m,...r})).sort((a,b)=>b.final-a.final);
+  document.getElementById('ts-table').innerHTML=`<table><thead><tr><th>Trade filter</th><th>$100 becomes</th><th>Sharpe</th><th>Sortino</th><th>Max drawdown</th><th>Trades</th><th>Win rate</th><th>¢ / contract</th><th>Weeks up</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.m.startsWith('TabPFN')?'tab':''}"><td>${RNAME(r.m)}</td><td class="num">${money(r.final)}</td><td class="num">${fmt(r.sharpe,2)}</td><td class="num">${fmt(r.sortino,2)}</td><td class="num">${fmt(r.max_dd_pct,1)}%</td><td class="num">${r.trades}</td><td class="num">${r.win_rate==null?'–':fmt(100*r.win_rate,1)+'%'}</td><td class="num ${r.c_per_ct<0?'neg':''}">${sgn(r.c_per_ct,2)}</td><td class="num">${r.weeks_up}</td></tr>`).join('')}</tbody></table>`;
+  const mo=RO.monthly;bars(document.getElementById('mo-bars'),mo.map(x=>x.month+'-01'),[{name:'Take every signal',color:'var(--classic)',v:mo.map(x=>x['Every signal'].c)},{name:'TabPFN-3.5',color:'var(--c1)',v:mo.map(x=>x['TabPFN-3.5'].c)}],{yfmt:a=>a+'¢',label:'monthly cents per contract',unit:'¢',catfmt:c=>new Date(c).toLocaleString('en',{month:'short',timeZone:'UTC'})});
+  const L=RO.live.series;const order=['Live, as traded (real fills)','TabPFN veto + half-Kelly (real fills)','TabPFN veto, flat 15% (real fills)'];
+  const sty={'Live, as traded (real fills)':{c:'var(--gray)',w:2.4},'TabPFN veto, flat 15% (real fills)':{c:'var(--c1)',w:3},'TabPFN veto + half-Kelly (real fills)':{c:'var(--c2)',w:2.2}};
+  lineChart(document.getElementById('live-chart'),order.map(k=>({name:k,color:sty[k].c,width:sty[k].w,pts:L[k].curve})),{x:'time',xstep:3,yfmt:a=>'$'+a,tipfmt:money,h:280,ylabel:'account value',label:'live period, real fills'});
+  document.getElementById('live-legend').innerHTML=order.map(k=>`<span><i style="border-top-color:${sty[k].c}"></i>${k}</span>`).join('');})();
 
 /* ===== explorer ===== */
 (function(){

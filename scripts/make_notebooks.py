@@ -394,65 +394,59 @@ else:
 # --------------------------------------------------------------------------- 00
 write("00_bottom_line.ipynb", [
     md("""
-# 00 · Bottom line: TabPFN as the trade filter of my live strategy
+# 00 · TabPFN-3.5 as a weekly-refit trade filter for my live strategy
 
-**This notebook uses my live strategy's real signals.** The features behind them are private and are not in this repo.
-Each model only decides which signals to take. The file `data/strategy/bluf_predictions.parquet` holds each model's
-score, its take/skip decision and the outcome, per signal.
+**This notebook uses my live strategy's real signals.** Their 32 features are private and not in this repo; the file
+`data/strategy/rolling_predictions.parquet` holds each model's probability, its decision and the outcome for every signal.
 
-- **Train** (Apr 15 – Jul 13): models are fitted here. Train scores are out-of-fold.
-- **Test** (Jul 14 – Sep 11): used once, to calibrate each model and set its trade rule.
-- **Holdout** (Sep 12 – Oct 2): everything frozen. This is exactly the period I traded live.
+The rule (PREREG.md, amendment 3), fixed before the run:
+- every Monday, refit on the previous 12 weeks of signals (TabPFN-3.5 untuned; logistic regression and LightGBM at defaults);
+- take a signal only if 100 × p − entry price − fee > 0;
+- stake 15% of the account, or half the Kelly stake from p capped at 15%.
 
-**Sizing:** $100 to start, and every trade stakes 15% of the current account.
-
-Every other notebook uses generic momentum indicators instead of these features.
+Every other notebook uses public data and generic indicators.
 """),
     code(SETUP),
     code("""
 from tabtrader import bankroll
-from tabtrader.report_data import BLUF_MODELS
-d = pd.read_parquet(ROOT / "data" / "strategy" / "bluf_predictions.parquet")
-meta = json.loads((ROOT / "data" / "strategy" / "bluf_meta.json").read_text())
-print(meta["n"]); d.head()"""),
-    md("### Account value from $100, per period"),
+from tabtrader.report_data import ROLL_MODELS
+d = pd.read_parquet(ROOT / "data" / "strategy" / "rolling_predictions.parquet")
+meta = json.loads((ROOT / "data" / "strategy" / "rolling_meta.json").read_text())
+print(meta["first_week"], "to", meta["last_signal"], "·", meta["weeks"], "weeks ·", meta["signals"], "signals")
+d.head()"""),
+    md("### Account value from $100"),
     code("""
-NAME = {"Live gate": "My current filter", "Every signal": "Take every signal"}
-res = {sp: bankroll.run_models(d, BLUF_MODELS, sp) for sp in ["train", "test", "holdout"]}
-fig, axes = plt.subplots(1, 3, figsize=(13, 3.8))
-for ax, sp in zip(axes, res):
-    for m in BLUF_MODELS[::-1]:
-        c = pd.DataFrame(res[sp][m]["curve"], columns=["day", "v"]); c["day"] = pd.to_datetime(c["day"])
-        hi = m == "TabPFN-3.5"
-        ax.plot(c.day, c.v, color=plots.TABPFN if hi else ("#7a8594" if m == "Live gate" else plots.CLASSIC),
-                lw=2.6 if hi else (1.8 if m == "Live gate" else 1), ls="--" if m in ("Live gate", "Every signal") else "-",
-                label=NAME.get(m, m) if m in ("TabPFN-3.5", "Live gate", "Every signal") else None)
-    ax.set_title(sp.capitalize()); ax.tick_params(axis="x", rotation=30)
-axes[0].set_ylabel("account value ($)"); axes[0].legend(fontsize=8); plt.tight_layout()"""),
+res = bankroll.run_models(d, ROLL_MODELS)
+fig, ax = plt.subplots(figsize=(10, 4))
+for m in ROLL_MODELS[::-1]:
+    c = pd.DataFrame(res[m]["curve"], columns=["day", "v"]); c["day"] = pd.to_datetime(c["day"])
+    style = {"TabPFN-3.5": (plots.TABPFN, 2.8, "-"), "TabPFN-3.5 + Kelly": (plots.FAST, 2, "-"),
+             "Live gate": ("#7a8594", 1.8, "--"), "Every signal": (plots.CLASSIC, 1.4, ":")}.get(m, (plots.CLASSIC, 1, "-"))
+    ax.plot(c.day, c.v, color=style[0], lw=style[1], ls=style[2], label=m)
+ax.set_yscale("log"); ax.set_ylabel("account value ($, log scale)"); ax.legend(fontsize=8); plt.tight_layout()"""),
     md("### Tear sheet"),
     code("""
-cols = ["final", "return_pct", "sharpe", "sortino", "max_dd_pct", "trades", "win_rate", "c_per_ct", "weeks_up"]
-for sp in res:
-    t = pd.DataFrame({NAME.get(m, m): {k: res[sp][m][k] for k in cols} for m in BLUF_MODELS}).T.sort_values("final", ascending=False)
-    print(sp.upper()); display(t)"""),
-    md("### Weekly returns (%)"),
+cols = ["final", "sharpe", "sortino", "max_dd_pct", "trades", "win_rate", "c_per_ct", "weeks_up"]
+pd.DataFrame({m: {k: r[k] for k in cols} for m, r in res.items()}).T.sort_values("final", ascending=False)"""),
+    md("### Month by month (¢ per contract)"),
     code("""
-wk = {}
-for sp in res:
-    for m in ["TabPFN-3.5", "Live gate"]:
-        for w, v in res[sp][m]["weekly"]:
-            wk.setdefault((sp, w), {})[NAME.get(m, m)] = v
-pd.DataFrame(wk).T.round(1)"""),
-    md("### Zoom: the live period, with real Kalshi fills"),
+d["month"] = d.day.str[:7]
+rows = {}
+for mo, g in d.groupby("month"):
+    rows[mo] = {m: (round(g.net_c_exits[g[f"take__{m}"]].mean(), 2), int(g[f"take__{m}"].sum()))
+                for m in ["Every signal", "TabPFN-3.5", "Live gate", "Logistic regression", "LightGBM"]}
+pd.DataFrame(rows).T"""),
+    md("### Real fills: my live trades since 2026-09-12, with and without TabPFN's veto"),
     code("""
-lt = pd.read_parquet(ROOT / "data" / "strategy" / "live_trades.parquet")
+lt = pd.read_parquet(ROOT / "data" / "strategy" / "rolling_live_trades.parquet")
 days = pd.date_range(lt.day.min(), lt.day.max(), freq="D")
 fig, ax = plt.subplots(figsize=(9, 3.6))
-for lab, take, col, lw in [("live, as traded", np.ones(len(lt), bool), "#7a8594", 2.2),
-                           ("live trades TabPFN keeps", lt.tabpfn_keeps.values, plots.TABPFN, 2.6)]:
-    eq = bankroll.daily_equity(lt.day, lt.real_net_c.values, lt.px_fill.values, take, days)
-    ax.plot(eq.index, eq.values, color=col, lw=lw, label=f"{lab}: ${eq.iloc[-1]:,.2f}")
+for lab, take, frac, col in [("as traded", np.ones(len(lt), bool), 0.15, "#7a8594"),
+                             ("TabPFN veto, flat 15%", lt.tabpfn_keeps.values, 0.15, plots.TABPFN),
+                             ("TabPFN veto, half-Kelly", lt.tabpfn_keeps.values, lt.frac_kelly.values, plots.FAST)]:
+    eq = bankroll.daily_equity(lt.day, lt.real_net_c.values, lt.px_fill.values, take, days, risk=frac)
+    ax.plot(eq.index, eq.values, color=col, lw=2.4, label=f"{lab}: ${eq.iloc[-1]:,.2f}")
 ax.set_ylabel("account value ($)"); ax.legend(); plt.tight_layout()
-print(f"{len(lt)} live trades; TabPFN keeps {lt.tabpfn_keeps.sum()} "
-      f"(kept {lt.real_net_c[lt.tabpfn_keeps].mean():+.2f} ¢/ct vs skipped {lt.real_net_c[~lt.tabpfn_keeps].mean():+.2f} ¢/ct)")"""),
+k = lt.tabpfn_keeps
+print(f"{len(lt)} live trades; TabPFN keeps {k.sum()}: kept {lt.real_net_c[k].mean():+.2f} ¢/ct, skipped {lt.real_net_c[~k].mean():+.2f} ¢/ct")"""),
 ])

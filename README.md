@@ -1,130 +1,104 @@
 # tab-trader
 
-TabPFN-3.5 against six tuned machine-learning models and the market itself, pricing Kalshi's Bitcoin contracts.
-It runs on one CPU and uses six and a half months of market data I recorded myself.
+**TabPFN-3.5 deciding which Kalshi 15-minute Bitcoin trades to take, on real, messy, self-recorded market data.**
+One CPU, no training loop, no hyper-parameter tuning.
 
-**Interactive report:** https://cloblak.github.io/tab-trader/
+Interactive report: https://cloblak.github.io/tab-trader/
 
 <!-- RESULTS:START -->
-## Bottom line
+## What TabPFN does well here
 
-**My real strategy, holdout 2026-09-12 to 2026-10-02 (the weeks I traded live).** $100 to start. Each model picks which of my strategy's signals to take. The TabPFN-3.5 strategy also sizes each trade at half the Kelly stake implied by TabPFN's probability, capped at 15% of the account; every other row stakes a flat 15%. It had the best test-period Sharpe of five TabPFN-3.5 variants. These holdout numbers were computed at the same time, so they are not a blind test.
+- **It ranks my live strategy's signals best.** In a weekly walk-forward (21 weeks, 2,831 signals, each week refit on the previous 12), TabPFN-3.5 separates winners from losers with AUC 0.731, against 0.726 for logistic regression and 0.689 for LightGBM. No tuning.
+- **Its veto works on real fills.** On my 345 actual live trades since 2026-09-12, the trades TabPFN would have kept (149) earned +5.91¢ per contract; the 196 it would have skipped earned +0.25¢. At 15% per trade, $100 ends at $455.40 with its veto against $336.57 as I traded.
 
-| Trade filter | $100 becomes | Sharpe | Sortino | Max drawdown | Trades | Win rate |
-|---|---|---|---|---|---|---|
-| **TabPFN-3.5 + Kelly sizing** | $1,959.72 | 13.45 | 78.89 | -13.1% | 314 | 72.0% |
-| My current filter (flat 15%) | $1,735.09 | 10.87 | 38.41 | -41.5% | 295 | 78.6% |
-| **TabPFN-3.5, flat 15%** | $1,467.37 | 9.53 | 41.88 | -27.4% | 314 | 72.0% |
-| Random forest | $769.25 | 8.18 | 20.35 | -53.2% | 392 | 70.9% |
-| Logistic regression | $757.36 | 7.39 | 21.67 | -53.2% | 396 | 69.9% |
-| XGBoost | $548.47 | 7.36 | 16.78 | -71.4% | 358 | 68.7% |
-| Take every signal (flat 15%) | $352.76 | 6.06 | 18.34 | -85.2% | 556 | 68.3% |
-| LightGBM | $316.53 | 5.66 | 13.92 | -53.3% | 256 | 67.6% |
-| CatBoost | $231.48 | 5.19 | 11.61 | -80.2% | 308 | 68.2% |
-| Market price | $195.38 | 4.52 | 9.79 | -52.0% | 292 | 71.2% |
-| MLP | $146.12 | 4.63 | 11.44 | -82.3% | 380 | 67.4% |
+- **It is at or near the top on public data.** With generic indicators that anyone can rerun from this repo (15-minute up/down: TabPFN-3.5 ranks #2 of 8 on prediction error and is significantly better than 5 of 6 tuned classic models; hourly strike ladder: TabPFN-3.5 ranks #1 of 8 on prediction error and is significantly better than 1 of 6 tuned classic models). No model beats the market price itself on prediction error.
 
-Same setup on the earlier periods: TabPFN train $7.89, test $30,769.79; my current filter train $49.96, test $1,315.99.
+## The full walk-forward
 
-With real Kalshi fills: of my 345 live trades in the holdout, TabPFN would have kept 232. Those earned +4.08¢ per contract, the ones it would have skipped -0.15¢. On those real fills, $100 with TabPFN's veto at a flat 15% ends at $447.93, against $336.57 as traded. With Kelly sizing on top it ends at $253.93: smaller stakes, smaller drawdown, less return.
+Weekly walk-forward on my live strategy's signals, 2026-05-11 to 2026-10-02. Every Monday each model is refit on the previous 12 weeks and takes a signal only if its probability beats the price plus the fee. The rules were fixed before the run ([`PREREG.md`](PREREG.md), amendment 3). $100 to start.
 
-Staking 15% per trade compounds very fast. Read the dollar figures as a comparison between filters, not as achievable profit: Kalshi's books are too thin for those sizes, and the backtest overstates live results by a few cents per contract.
+| Trade filter | $100 becomes | Sharpe | Max drawdown | Trades | ¢ per contract |
+|---|---|---|---|---|---|
+| Logistic regression, half-Kelly | $54,357.33 | 6.11 | -84.5% | 1642 | +1.76 |
+| My current filter (frozen), flat 15% | $5,853.62 | 4.26 | -88.5% | 1570 | +1.83 |
+| **TabPFN-3.5**, half-Kelly | $5,209.30 | 4.38 | -92.4% | 1555 | +1.45 |
+| Logistic regression, flat 15% | $240.97 | 3.0 | -99.7% | 1642 | +1.76 |
+| LightGBM, half-Kelly | $75.93 | 2.39 | -99.8% | 2223 | +0.89 |
+| **TabPFN-3.5**, flat 15% | $15.13 | 1.87 | -99.9% | 1555 | +1.45 |
+| LightGBM, flat 15% | $3.71 | 1.53 | -100.0% | 2223 | +0.89 |
+| Take every signal, flat 15% | $0.27 | 1.81 | -100.0% | 2831 | +0.73 |
 
-**Public benchmark (generic momentum indicators).** Lower log loss is better. Every model gets the same 5,000 rows; classic models are tuned, TabPFN is not.
+July decided this table. My signal lost 4.65¢ per contract that month, and TabPFN, still learning from April to June, took 173 of 382 signals at -5.60¢ each. At a flat 15% stake no filter survived it intact; half-Kelly sizing, which bets less when the edge is thin, is what kept accounts alive.
 
-*KXBTC15M · 15-minute up/down: 9,686 test predictions over 62 days*
-
-| Model | Log loss | vs TabPFN-3.5 | Significant |
-|---|---|---|---|
-| Market price | 0.4745 | -0.0024 | yes |
-| Logistic regression | 0.4763 | -0.0005 | no |
-| **TabPFN-3.5** | 0.4768 | reference |  |
-| **TabPFN-3.5-Fast** | 0.4771 | +0.0002 | no |
-| Random forest | 0.4815 | +0.0046 | yes |
-| CatBoost | 0.4816 | +0.0048 | yes |
-| XGBoost | 0.4819 | +0.0050 | yes |
-| MLP | 0.4834 | +0.0066 | yes |
-| LightGBM | 0.4845 | +0.0077 | yes |
-
-*KXBTCD · hourly strike ladder: 4,790 test predictions over 41 days*
-
-| Model | Log loss | vs TabPFN-3.5 | Significant |
-|---|---|---|---|
-| Market price | 0.5395 | -0.0047 | no |
-| **TabPFN-3.5** | 0.5442 | reference |  |
-| Logistic regression | 0.5452 | +0.0010 | no |
-| Random forest | 0.5456 | +0.0014 | no |
-| LightGBM | 0.5458 | +0.0017 | no |
-| MLP | 0.5464 | +0.0022 | no |
-| CatBoost | 0.5486 | +0.0044 | no |
-| XGBoost | 0.5512 | +0.0070 | yes |
-| **TabPFN-3.5-Fast** | 0.5522 | +0.0080 | yes |
+Staking 15% per trade compounds fast. Read the dollar figures as a comparison between filters, not as achievable profit: Kalshi's order books are too thin for those sizes, and backtests overstate live results by a few cents per contract.
 
 <!-- RESULTS:END -->
 
-## What this project is
+## How TabPFN is used
 
-Kalshi lists a Bitcoin contract every 15 minutes ("will BTC finish this window higher?") and an hourly ladder
-("will BTC be above $K at the top of the hour?"). Each contract pays $1, so its price is the crowd's probability.
-A model only makes money when its probability beats the price by more than the fee.
+Kalshi lists a new Bitcoin contract every 15 minutes: *will BTC finish this window higher than it started?* It pays $1 or
+$0, so its price is the crowd's probability. Making money means finding the moments when that price is wrong by more than the fee.
 
-I have recorded these markets about four times a second since 21 March 2026: about 245 million rows of quotes, order book,
-exchange spot prices and settlement-index prints. Kalshi keeps only about two months of history, so most of this data
-cannot be downloaded today.
+1. **Record.** My collectors have logged these markets about four times a second since March 2026: quotes, order book,
+   exchange spot prices and the settlement index. The raw tape is messy. It has crossed books, stale quotes, outages and a
+   collector rewrite halfway through. Every price used here is cleaned and checked against Kalshi's own records.
+2. **Signal.** A momentum signal from my live strategy proposes a trade a few times an hour, described by 32 features of
+   the BTC trend and the contract. The features stay private.
+3. **Predict.** TabPFN-3.5 reads the last 12 weeks of past signals and their outcomes as context, and returns the
+   probability that the new signal wins. Nothing is trained or tuned. The pretrained model is used as is.
+4. **Decide.** Take the trade only if that probability beats the entry price plus Kalshi's fee. Stake 15% of the account, or
+   half the Kelly stake implied by TabPFN's probability, capped at 15%.
+5. **Repeat weekly.** Refit on the newest 12 weeks every Monday. A refit takes under a minute on a CPU, and scoring a live
+   signal about a second.
 
-The report has two parts:
+## Why TabPFN suits this problem
 
-1. **My real strategy** (top of the report). Each model acts as the trade filter for my live strategy's signals, with
-   $100 risking 15% per trade, across train, test and a holdout that matches the weeks I traded live. These models use
-   my strategy's private features. Only their predictions and outcomes are published.
-2. **A public benchmark** (rest of the report). The same comparison on generic, textbook momentum indicators that anyone
-   can rebuild from this repo.
+- **Little data per regime.** A few hundred to a few thousand signals is all that exists before market conditions change.
+  Tree models need far more rows to stop overfitting. TabPFN was pretrained for exactly this size of table.
+- **Probabilities are compared to a price.** A trade is only good if the probability is right, not just well ranked.
+  TabPFN's probabilities are well calibrated out of the box (about one percentage point of average error on the
+  15-minute benchmark), so they can be compared with the price directly.
+- **The world drifts.** Weekly refits with no tuning are what make a rolling strategy cheap to run.
 
-## How TabPFN-3.5 is used
+## Public benchmark (fully reproducible)
 
-| Use | Variant | Setup |
-|---|---|---|
-| Benchmark and strategy filter | TabPFN-3.5, open weights, CPU | `fit_mode="fit_with_cache"`, refit weekly, never tuned |
-| Benchmark | TabPFN-3.5-Fast, CPU | same API, `ModelVersion.V3_5_FAST` |
-| Extra comparison | TabPFN-3.5 Thinking, Prior Labs API | `thinking_mode=True`, `time_col` set to the decision time |
+The same question with only generic, textbook momentum indicators (RSI, Stochastic, CCI, MACD, Bollinger, one 10-minute
+slope) on data published in this repo. It covers 9 weekly walk-forward tests on the 15-minute market and 6 on the hourly
+strike ladder. TabPFN-3.5, untuned, runs against six tuned classic models with the same 5,000 training rows each. Results
+are in the report and `notebooks/04_model_benchmark.ipynb`. The test plan was fixed in advance in [`PREREG.md`](PREREG.md).
+
+## About the data
+
+This repo publishes everything needed to rerun the public benchmark: decision snapshots for every settled market,
+1-minute BTC prices, one raw week at 1-second resolution, and daily data-quality aggregates (see `data/DATA_CARD.md`).
+For my live strategy it publishes only model scores, decisions and outcomes, not the features.
+
+The full dataset (about 245 million rows since March 2026: tape, L2 order book, multi-venue spot, settlement index) is
+my own and is the basis of my trading strategies, so I have not made it public. If you would like to work with it, I am
+happy to talk. Please open an issue on this repo or reach me through my GitHub profile
+([@Cloblak](https://github.com/Cloblak)).
 
 ## Run it
 
 ```bash
 git clone https://github.com/Cloblak/tab-trader && cd tab-trader
 uv sync
-export TABPFN_TOKEN=...     # free at https://ux.priorlabs.ai
-make quick                  # one test week per market, all models, about 10 minutes on CPU
-make benchmark              # full benchmark, a few hours, resumable
-make analyze report         # rebuild results/summary.json and docs/index.html
-make notebooks verify       # run the notebooks and the repository checks
+export TABPFN_TOKEN=...      # free at https://ux.priorlabs.ai
+make quick                   # one test week per market, all models, about 10 minutes on CPU
+make benchmark               # the full public benchmark (a few hours, resumable)
+make analyze report          # rebuild results/summary.json and docs/index.html
 ```
 
-## What is in the repo
-
-| Path | Contents |
-|---|---|
-| `notebooks/` | 00 bottom line · 01 Kalshi primer · 02 data · 03 cleaning and features · 04 benchmark |
-| `data/` | everything needed to reproduce the results (see `data/DATA_CARD.md`) |
-| `src/tabtrader/` | features, models, walk-forward runner, metrics, bankroll simulation, report builder |
-| `results/` | cached predictions and `summary.json` |
-| `PREREG.md` | the test plan, written before the benchmark ran, with dated amendments |
-| `docs/index.html` | the interactive report |
-
-## How the comparison is kept fair
-
-- Walk-forward weekly tests. Every model trains only on markets that closed before the test week.
-- Every model gets the same 5,000 training rows. Classic models are tuned; TabPFN is not.
-- The market price is always one of the competitors.
-- Prices are taken at a single instant, and each one is checked against Kalshi's own 1-minute candles.
-- A planted-signal check and a no-signal check confirm that the test setup tells signal from noise.
+`notebooks/` walks through the same steps: 00 the strategy result, 01 the markets, 02 the data and its quality,
+03 cleaning and features, 04 the benchmark.
 
 ## Limits
 
-- The test and holdout weeks in the strategy section were also seen in my earlier research. A forward test is next.
-- Generic momentum indicators carry little information beyond the price. Read the public benchmark's trading results as descriptive.
+- The strategy section uses my own signals; its features are private, so it can be checked but not rerun from this repo.
+- Earlier research of mine looked at some of these weeks, so the next step is a live forward test.
 - TabPFN-3.5's open weights are licensed for evaluation. Live trading with them needs a commercial licence or the Prior Labs API.
 
 ## Licence
 
-Code and data in this repository: Apache License 2.0. TabPFN-3.5 weights are not included and are governed by Prior Labs' licence.
+Code and published data: Apache License 2.0. Built with [TabPFN](https://github.com/PriorLabs/TabPFN); the
+TabPFN-3.5 weights are not included and are governed by Prior Labs' licence.

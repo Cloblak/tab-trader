@@ -28,7 +28,10 @@ documents every query. Timestamps are UTC. Prices are in cents (1–99). `label 
 | `raw_week/kxbtcd_quotes_10s.parquet` | 279,491 | Same week, hourly ladder, last quote in each 10 s |
 | `raw_week/settlements_{15m,1h}.parquet` | 665 / 1,083 | Strikes, open/close times and labels for the sample week |
 | `eda/*.parquet` | — | Daily aggregates only: rows, markets, valid/crossed counts, labels |
-| `strategy/bluf_predictions.parquet` | 3,552 | Bottom line: every signal of the author's live strategy (Apr 15 – Oct 2) with the split (train/test/holdout), entry price, outcome, net ¢ per contract, and each model's score and take/skip decision. No features, no timestamps finer than a day, no tickers or trade direction |
+| `strategy/rolling_predictions.parquet` | 2,831 | Weekly walk-forward on the author's live strategy (May 11 – Oct 2): day, week, entry price, outcome, net ¢ per contract, and each model's probability, take/skip decision and half-Kelly stake. No features, no timestamps finer than a day, no tickers or trade direction |
+| `strategy/rolling_live_trades.parquet` | 345 | The real live trades since 2026-09-12: day, fill price, net ¢ per contract after Kalshi fees, and the rolling TabPFN verdict and half-Kelly stake for each |
+| `strategy/rolling_meta.json` | — | Walk-forward settings, week list and per-fit timings |
+| `strategy/bluf_predictions.parquet` | 3,552 | Earlier fixed-split study (train / test / holdout, superseded by the walk-forward): every signal of the author's live strategy (Apr 15 – Oct 2) with the split (train/test/holdout), entry price, outcome, net ¢ per contract, and each model's score and take/skip decision. No features, no timestamps finer than a day, no tickers or trade direction |
 | `strategy/live_trades.parquet` | — | The real live trades since 2026-09-12: day, fill price, net ¢ per contract after Kalshi fees, and whether TabPFN would have kept each one |
 | `strategy/bluf_meta.json` | — | Split dates, counts and each model's chosen trading margin |
 | `fidelity/fidelity.json` | — | "Backtest vs live" section: live-vs-backtest agreement rates and cents per contract (no dollar amounts) |
