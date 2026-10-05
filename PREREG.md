@@ -81,3 +81,23 @@ The superseded run's summary is kept in `results/archive_v1_features/summary.jso
 TabPFN-3.5 had the lowest log loss of the eight learners there, and its gap to five of the six tuned classic
 models was significant after Benjamini–Hochberg. No model beat the market price. Both results are reported,
 so the reader can check that the conclusion does not depend on the feature swap.
+
+## Amendment 3: rolling walk-forward on the live strategy's signals (2026-10-05, before running)
+
+The train/test/holdout study used one fixed trade rule, tuned on Jul–Sep, for every period, so it was
+stale in spring. This amendment specifies the deployable version. It is written before any result is computed.
+
+* **Signals:** the live strategy's signals (clean quotes, trading hours), as in the bottom-line study.
+* **Weekly walk-forward:** test weeks run Monday to Sunday, from 2026-05-11 to the end of the data
+  (2026-10-02). For each week, every model is refit on the signals from the previous 12 weeks that entered
+  at least 15 minutes before the week starts, capped at 5,000. No row from the test week is ever in the context.
+* **Models:** TabPFN-3.5 (local, untuned), logistic regression (scikit-learn defaults, standardised),
+  LightGBM (defaults). Baselines: take every signal; the frozen live gate (trained Apr 19 – May 10, so
+  every test week here is after its training window).
+* **Primary rule (no tuning anywhere):** take a signal iff 100·p − entry price − taker fee > 0, where p is
+  the model's raw probability. Primary sizing: flat 15% of the account per trade. Secondary sizing: half-Kelly
+  from p, capped at 15%.
+* **Secondary rule:** the same, with p first passed through an isotonic map fitted on that model's own
+  out-of-sample predictions from the previous 4 test weeks (no calibration in the first 4 weeks).
+* **Report:** equity from $100, ¢ per contract, Sharpe, Sortino, max drawdown, by month and overall, plus
+  TabPFN's verdict on the real live trades since 2026-09-12 (real fills).
