@@ -101,3 +101,7 @@ stale in spring. This amendment specifies the deployable version. It is written 
   out-of-sample predictions from the previous 4 test weeks (no calibration in the first 4 weeks).
 * **Report:** equity from $100, ¢ per contract, Sharpe, Sortino, max drawdown, by month and overall, plus
   TabPFN's verdict on the real live trades since 2026-09-12 (real fills).
+
+*Data refresh, 2026-10-05 23:55 UTC:* the walk-forward inputs were rebuilt from source to include signals and live trades
+through 2026-10-05 (backtest sweep rerun, live journal and Kalshi fills pulled again). The rule, the context window and
+the models are unchanged; the only difference is more weeks at the end.
