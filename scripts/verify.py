@@ -139,8 +139,8 @@ def privacy() -> None:
             if re.search(p, txt):
                 hits.append(f"{f}: /{p[:30]}/")
     check("no secrets, hosts or private strings in tracked files", not hits, "; ".join(hits[:5]))
-    for f, pat in [("bluf_predictions", r"^(day|split|px|won|net_c_hold|net_c_exits|take__.*|p__.*)$"),
-                   ("live_trades", r"^(day|px_fill|real_net_c|tabpfn_keeps|backtest_live_gate_takes)$")]:
+    for f, pat in [("bluf_predictions", r"^(day|split|px|won|net_c_hold|net_c_exits|take__.*|p__.*|frac__.*)$"),
+                   ("live_trades", r"^(day|px_fill|real_net_c|tabpfn_keeps|backtest_live_gate_takes|frac_kelly)$")]:
         d = pd.read_parquet(ROOT / f"data/strategy/{f}.parquet")
         allowed = re.compile(pat)
         check(f"{f}: only scores, decisions and outcomes (no features)", all(allowed.match(c) for c in d.columns),

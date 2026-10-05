@@ -8,24 +8,25 @@ It runs on one CPU and uses six and a half months of market data I recorded myse
 <!-- RESULTS:START -->
 ## Bottom line
 
-**My real strategy, holdout 2026-09-12 to 2026-10-02 (the weeks I traded live).** $100 to start, 15% of the account staked per trade. Each model only picks which of my strategy's signals to take.
+**My real strategy, holdout 2026-09-12 to 2026-10-02 (the weeks I traded live).** $100 to start. Each model picks which of my strategy's signals to take. The TabPFN-3.5 strategy also sizes each trade at half the Kelly stake implied by TabPFN's probability, capped at 15% of the account; every other row stakes a flat 15%. It had the best test-period Sharpe of five TabPFN-3.5 variants. These holdout numbers were computed at the same time, so they are not a blind test.
 
 | Trade filter | $100 becomes | Sharpe | Sortino | Max drawdown | Trades | Win rate |
 |---|---|---|---|---|---|---|
-| My current filter | $1,735.09 | 10.87 | 38.41 | -41.5% | 295 | 78.6% |
-| **TabPFN-3.5** | $1,467.37 | 9.53 | 41.88 | -27.4% | 314 | 72.0% |
+| **TabPFN-3.5 + Kelly sizing** | $1,959.72 | 13.45 | 78.89 | -13.1% | 314 | 72.0% |
+| My current filter (flat 15%) | $1,735.09 | 10.87 | 38.41 | -41.5% | 295 | 78.6% |
+| **TabPFN-3.5, flat 15%** | $1,467.37 | 9.53 | 41.88 | -27.4% | 314 | 72.0% |
 | Random forest | $769.25 | 8.18 | 20.35 | -53.2% | 392 | 70.9% |
 | Logistic regression | $757.36 | 7.39 | 21.67 | -53.2% | 396 | 69.9% |
 | XGBoost | $548.47 | 7.36 | 16.78 | -71.4% | 358 | 68.7% |
-| Take every signal | $352.76 | 6.06 | 18.34 | -85.2% | 556 | 68.3% |
+| Take every signal (flat 15%) | $352.76 | 6.06 | 18.34 | -85.2% | 556 | 68.3% |
 | LightGBM | $316.53 | 5.66 | 13.92 | -53.3% | 256 | 67.6% |
 | CatBoost | $231.48 | 5.19 | 11.61 | -80.2% | 308 | 68.2% |
 | Market price | $195.38 | 4.52 | 9.79 | -52.0% | 292 | 71.2% |
 | MLP | $146.12 | 4.63 | 11.44 | -82.3% | 380 | 67.4% |
 
-Same setup on the earlier periods: TabPFN train $0.10, test $115,014.07; my current filter train $49.96, test $1,315.99.
+Same setup on the earlier periods: TabPFN train $7.89, test $30,769.79; my current filter train $49.96, test $1,315.99.
 
-With real Kalshi fills: of my 345 live trades in the holdout, TabPFN would have kept 232. Those earned +4.08¢ per contract, the ones it would have skipped -0.15¢.
+With real Kalshi fills: of my 345 live trades in the holdout, TabPFN would have kept 232. Those earned +4.08¢ per contract, the ones it would have skipped -0.15¢. On those real fills, $100 with TabPFN's veto at a flat 15% ends at $447.93, against $336.57 as traded. With Kelly sizing on top it ends at $253.93: smaller stakes, smaller drawdown, less return.
 
 Staking 15% per trade compounds very fast. Read the dollar figures as a comparison between filters, not as achievable profit: Kalshi's books are too thin for those sizes, and the backtest overstates live results by a few cents per contract.
 

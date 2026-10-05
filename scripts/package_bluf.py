@@ -47,6 +47,13 @@ def edge_take(q: np.ndarray, px: np.ndarray, m: float) -> np.ndarray:
     return 100 * q - px - fee_c(px) > m
 
 
+def kelly_stake(q, px_c, cap: float = 0.15, mult: float = 0.5):
+    """Half-Kelly stake for a binary bought at px (fee included), capped at ``cap`` of the account."""
+    cost = (np.asarray(px_c, float) + fee_c(px_c)) / 100
+    f = np.clip((np.asarray(q, float) - cost) / (1 - cost), 0, None)
+    return np.minimum(cap, mult * f)
+
+
 def decision_layer(p_test, y_test, px_test, net_test):
     """Isotonic calibration + margin, both chosen on Test only."""
     iso = IsotonicRegression(out_of_bounds="clip", y_min=EPS, y_max=1 - EPS).fit(p_test, y_test)
@@ -87,6 +94,8 @@ def main() -> None:
                         "won": y, "net_c_exits": net.round(3), "net_c_hold": d["hold_net_c"].round(3)})
     meta = {}
     extra = {}
+    extra_p = {}
+    isos = {}
     folds = np.array_split(np.where(tr)[0], K)
 
     def run(name, fit_predict):
@@ -102,6 +111,7 @@ def main() -> None:
         iso, m = decision_layer(p[te], y[te], px[te], net[te])
         p_ex = np.clip(both[n_main:], EPS, 1 - EPS)
         extra[name] = edge_take(iso.predict(p_ex), ex_rows["px"].to_numpy(float), m)
+        extra_p[name], isos[name] = p_ex, iso
         out[f"p__{name}"] = p.round(5)
         out[f"take__{name}"] = edge_take(iso.predict(p), px, m)
         meta[name] = {"margin_c": m, "seconds": round(time.perf_counter() - t0, 1)}
@@ -124,6 +134,12 @@ def main() -> None:
         return m.predict_proba(Xb)[:, 1]
     run("TabPFN-3.5", tabpfn)
 
+    # TabPFN-3.5 strategy chosen on Test (best Sharpe of five variants): same trades as the TabPFN filter,
+    # stake = half the Kelly fraction from TabPFN's calibrated probability, capped at 15% of the account.
+    q = isos["TabPFN-3.5"].predict(out["p__TabPFN-3.5"].to_numpy())
+    out["take__TabPFN-3.5 + Kelly"] = out["take__TabPFN-3.5"]
+    out["frac__TabPFN-3.5 + Kelly"] = kelly_stake(q, px).round(4)
+
     # Baselines.
     run("Market price", lambda Xa, ya, Xb: np.clip(1 / (1 + np.exp(-Xb[:, -1])), EPS, 1 - EPS))
     pdep = d["p_deployed"].to_numpy(float)
@@ -142,6 +158,8 @@ def main() -> None:
     live = pd.read_parquet(src / "live.parquet")
     live = live[(live["entry_ts"] >= HOLD_START) & live["real_net_per_ct"].notna()].copy()
     tk = dict(zip(ex_rows["market"], extra["TabPFN-3.5"]))
+    q_ex = isos["TabPFN-3.5"].predict(extra_p["TabPFN-3.5"])
+    qk = dict(zip(ex_rows["market"], q_ex))
     lg = dict(zip(ex_rows["market"], ex_rows["p_deployed"].to_numpy(float) >= args.live_threshold))
     live = live[live["market"].isin(tk.keys())]  # the few live trades with no recorded signal are dropped
     lt = pd.DataFrame({
@@ -151,6 +169,8 @@ def main() -> None:
         "tabpfn_keeps": live["market"].map(tk).astype(bool),
         "backtest_live_gate_takes": live["market"].map(lg).astype(bool),
     })
+    # Kelly stake on the real fill price, from TabPFN's calibrated probability for that signal.
+    lt["frac_kelly"] = kelly_stake(live["market"].map(qk).to_numpy(float), live["fill_entry_c"].to_numpy(float)).round(4)
     order = np.lexsort((rng.random(len(lt)), lt["day"].to_numpy()))
     lt.iloc[order].reset_index(drop=True).to_parquet(dst / "live_trades.parquet", index=False)
     (dst / "bluf_meta.json").write_text(json.dumps(

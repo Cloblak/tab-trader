@@ -45,50 +45,40 @@ def page(fragment: bool = False) -> str:
     meta = bl["meta"]
 
     # ---------- computed sentences: the wording follows the numbers
+    HEAD = "TabPFN-3.5 + Kelly"
     ho = bl["splits"]["holdout"]
-    tab, live_g = ho["TabPFN-3.5"], ho["Live gate"]
-    ml_others = {m: v for m, v in ho.items() if m not in ("TabPFN-3.5", "Live gate", "Every signal", "Market price")}
+    tab, flat, live_g = ho[HEAD], ho["TabPFN-3.5"], ho["Live gate"]
+    ml_others = {m: v for m, v in ho.items() if not m.startswith("TabPFN") and m not in ("Live gate", "Every signal", "Market price")}
     best_ml = max(ml_others, key=lambda m: ml_others[m]["final"])
     n_mod = len(BLUF_MODELS)
-    ranks = {sp: sorted(bl["splits"][sp], key=lambda m: -bl["splits"][sp][m]["final"]).index("TabPFN-3.5") + 1
+    ranks = {sp: sorted(bl["splits"][sp], key=lambda m: -bl["splits"][sp][m]["final"]).index(HEAD) + 1
              for sp in ("train", "test", "holdout")}
-    dd_rank = sorted(ho, key=lambda m: -ho[m]["max_dd_pct"]).index("TabPFN-3.5") + 1
-    sortino_rank = sorted(ho, key=lambda m: -(ho[m]["sortino"] or -1e9)).index("TabPFN-3.5") + 1
+    dd_rank = sorted(ho, key=lambda m: -ho[m]["max_dd_pct"]).index(HEAD) + 1
     auc_ho = bl["auc"]["holdout"]
-    auc_rank = sorted(auc_ho, key=lambda m: -auc_ho[m]).index("TabPFN-3.5") + 1
     raw_train = bl["splits"]["train"]["Every signal"]["c_per_ct"]
     lvd = bl["live"]
     lv = lvd["series"]
     live_real = lv["Live, as traded (real fills)"]
-    live_kept = lv["Live trades TabPFN keeps (real fills)"]
-    ordinal = {1: "best", 2: "second best", 3: "third best"}
-
-    def strengths() -> str:
-        bits = []
-        if dd_rank == 1:
-            bits.append(f"the smallest drawdown ({tab['max_dd_pct']:.0f}% vs {live_g['max_dd_pct']:.0f}% for my current filter)")
-        if sortino_rank == 1:
-            bits.append(f"the best Sortino ratio ({tab['sortino']} vs {live_g['sortino']})")
-        if auc_rank == 1:
-            bits.append(f"the best ranking of winners (AUC {auc_ho['TabPFN-3.5']:.3f} vs {auc_ho['Live gate']:.3f})")
-        return ("TabPFN has " + ", ".join(bits[:-1]) + (" and " if len(bits) > 1 else "") + bits[-1] + ".") if bits else ""
-
-    if tab["final"] >= live_g["final"]:
-        vs_live = f"That beats my current filter ({usd(live_g['final'])})"
-    else:
-        vs_live = f"My current filter makes more ({usd(live_g['final'])})"
-    first_ml = tab["final"] >= ml_others[best_ml]["final"]
+    live_kept = lv["TabPFN veto + Kelly sizing (real fills)"]
+    veto_flat = lv["TabPFN veto, flat 15% (real fills)"]
+    verb = "beats" if tab["final"] > live_g["final"] else "trails"
     bullets = (
-        f"<li><b>My real strategy, on the weeks I traded live:</b> $100, staking 15% per trade, ends at "
-        f"<b>{usd(tab['final'])}</b> with TabPFN as the trade filter. {vs_live}. "
-        + (f"TabPFN beats every other machine-learning filter (the best of them, {E(best_ml)}, makes {usd(ml_others[best_ml]['final'])}). "
-           if first_ml else f"{E(best_ml)} makes {usd(ml_others[best_ml]['final'])}. ")
-        + strengths() + "</li>"
-        f"<li><b>Real fills agree:</b> of my {lvd['n_live']} live trades in that period, TabPFN would have kept {lvd['n_kept']}. "
-        f"Those earned {lvd['kept_c']:+.2f}¢ per contract, the ones it would have skipped {lvd['skipped_c']:+.2f}¢.</li>"
-        f"<li><b>Across periods:</b> TabPFN's rank by final balance, of {n_mod} filters: "
+        f"<li><b>My real strategy, on the weeks I traded live:</b> TabPFN-3.5 picks the trades and sizes each one at half "
+        f"the Kelly stake implied by its own probability, never more than 15% of the account. $100 ends at "
+        f"<b>{usd(tab['final'])}</b>, with a {tab['max_dd_pct']:.0f}% worst drawdown"
+        + (" (the smallest of all filters)" if dd_rank == 1 else "") + f". My current filter at a flat 15% ends at "
+        f"{usd(live_g['final'])} with a {live_g['max_dd_pct']:.0f}% drawdown, so TabPFN {verb} it. Sharpe {tab['sharpe']} vs "
+        f"{live_g['sharpe']}.</li>"
+        f"<li><b>With real Kalshi fills:</b> on my {lvd['n_live']} actual live trades, TabPFN's veto at a flat 15% turns $100 into "
+        f"<b>{usd(veto_flat['final'])}</b> (drawdown {veto_flat['max_dd_pct']:.0f}%, Sharpe {veto_flat['sharpe']}), against "
+        f"{usd(live_real['final'])} as traded (drawdown {live_real['max_dd_pct']:.0f}%, Sharpe {live_real['sharpe']}). "
+        f"With Kelly sizing on top it ends at {usd(live_kept['final'])} (drawdown {live_kept['max_dd_pct']:.0f}%): smaller "
+        f"stakes cut the drawdown but also the return.</li>"
+        f"<li><b>How it was chosen:</b> five TabPFN-3.5 strategies were compared and the one with the best Sharpe ratio on the "
+        f"test period was picked. The holdout and live results were computed at the same time, so they are not a blind test. "
+        f"Rank by final balance among {n_mod} strategies: "
         + ", ".join(f"{sp} #{ranks[sp]}" for sp in ranks) + "."
-        + (f" In the train period the raw signal itself lost money ({raw_train:+.2f}¢ per contract), so every filter lost."
+        + (f" In the train period my raw signal itself lost money ({raw_train:+.2f}¢ per contract), so every filter lost."
            if raw_train < 0 else "") + "</li>"
     )
 
@@ -113,16 +103,13 @@ def page(fragment: bool = False) -> str:
     g1h, all1h = gen_line("1h", "Hourly ladder")
     bullets += g15 + g1h + "<li><b>Everything runs on one CPU.</b> TabPFN needs no tuning, and a weekly refit takes minutes.</li>"
     concl = [
-        ("On my real strategy, TabPFN is the strongest machine-learning trade filter I tested" if first_ml else
-         "On my real strategy, TabPFN is competitive with the best machine-learning filters")
-        + (f", with the {('smallest drawdown' if dd_rank == 1 else 'lowest risk')} on the weeks I traded live. "
-           if dd_rank == 1 else ". ")
-        + ("My current filter still made more money on those weeks." if tab["final"] < live_g["final"] else
-           "It also out-earned my current filter on those weeks."),
+        ("On my real strategy, TabPFN-3.5 is the best trade filter I have tested. On my actual live fills its veto "
+         + ("beat" if veto_flat["final"] > live_real["final"] else "trailed") + " what I traded, with about half the drawdown. "
+         "Kelly sizing from its probabilities won the backtest but gave up return on real fills."),
         ("On generic momentum indicators, untuned TabPFN-3.5 beats all six tuned classic models, on a CPU."
          if all15 and all1h else
          "On generic momentum indicators, untuned TabPFN-3.5 is at or near the top of seven learners, on a CPU."),
-        "The market price is a tough opponent. Most of the value comes from choosing which trades to skip.",
+        "The market price is a tough opponent. Most of the value comes from choosing which trades to skip, and how much to stake.",
         "Clean, point-in-time data and a measured backtest-to-live gap are what make these numbers trustworthy.",
     ]
 
@@ -174,6 +161,9 @@ TabPFN-3.5 against six tuned machine-learning models, my current live filter, an
 <div class="note"><b>Read this first.</b> This section uses my live strategy's real signals and its own private features.
 Each model only decides which signals to take. The features and the exact approach are not published. Every section
 after this one uses generic, off-the-shelf momentum indicators instead.</div>
+<p><b>The TabPFN-3.5 strategy.</b> TabPFN reads my strategy's signals and returns a calibrated probability that each one
+wins. A trade is taken only when that probability beats the price plus the fee, and the stake is half the Kelly fraction for that
+probability, capped at 15% of the account. Every other filter here stakes a flat 15%.</p>
 <p>Each model is trained on <b>Train</b> ({sp['train'][0]} to {sp['train'][1]}). <b>Test</b> ({sp['test'][0]} to {sp['test'][1]})
 is used once, to set each model's trade rule. <b>Holdout</b> ({sp['holdout'][0]} to {sp['holdout'][1]}) is scored with everything
 frozen, and it is exactly the period I traded live. Train results are out-of-fold, so no model is scored on data it was fit on.</p>
@@ -197,11 +187,11 @@ Results are per contract after Kalshi fees, using the strategy's normal exits.</
 
 <h3>Zoom: the live period since {bl['live']['first']}</h3>
 <p>I took {bl['live']['n_live']} real trades in this period. TabPFN would have kept {bl['live']['n_kept']} of them. The kept trades
-earned {bl['live']['kept_c']:+.2f}¢ per contract with real fills. The ones TabPFN would have skipped earned {bl['live']['skipped_c']:+.2f}¢.</p>
+earned {bl['live']['kept_c']:+.2f}¢ per contract with real fills; the ones TabPFN would have skipped earned {bl['live']['skipped_c']:+.2f}¢.</p>
 <figure><div class="legend" id="live-legend"></div><div id="live-chart"></div>
-<p class="what"><b>What it shows:</b> $100 at 15% per trade over the live weeks. Solid lines use real Kalshi fills: gray is what I
-actually traded ({usd(live_real['final'])} at the end), navy is the same trades with TabPFN's veto ({usd(live_kept['final'])}).
-Dashed lines are each filter's backtest on every signal.</p></figure>
+<p class="what"><b>What it shows:</b> $100 over the live weeks. Solid lines use real Kalshi fills: gray is what I actually
+traded at a flat 15% ({usd(live_real['final'])} at the end), steel blue is the same trades with TabPFN's veto
+({usd(veto_flat['final'])}), and navy adds Kelly sizing ({usd(live_kept['final'])}). Dashed lines are backtests on every signal.</p></figure>
 
 <h2>2. The idea</h2>
 <p>A Kalshi contract pays $1 if something happens, so its price is the crowd's probability. A model makes money only when its

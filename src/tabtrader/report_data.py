@@ -12,7 +12,7 @@ from . import bankroll, eda
 from .data import DATA, MARKETS, ROOT
 from .features import FEATURE_GROUPS
 
-BLUF_MODELS = ["TabPFN-3.5", "Live gate", "Every signal", "Market price", "Logistic regression",
+BLUF_MODELS = ["TabPFN-3.5 + Kelly", "TabPFN-3.5", "Live gate", "Every signal", "Market price", "Logistic regression",
                "Random forest", "XGBoost", "LightGBM", "CatBoost", "MLP"]
 SPLITS = ["train", "test", "holdout"]
 
@@ -105,19 +105,23 @@ def bluf_data() -> dict:
         out["splits"][sp] = bankroll.run_models(d, BLUF_MODELS, sp)
         g = d[d.split == sp]
         out["auc"][sp] = {m: r(roc_auc_score(g.won, g[f"p__{m}"]), 4) for m in BLUF_MODELS if f"p__{m}" in g}
+        out["auc"][sp]["TabPFN-3.5 + Kelly"] = out["auc"][sp]["TabPFN-3.5"]
     # Live period: real fills vs the TabPFN filter, both at $100 and 15% per trade.
     lt = pd.read_parquet(DATA / "strategy" / "live_trades.parquet")
     ho = d[d.split == "holdout"]
     days = pd.date_range(pd.to_datetime(min(lt.day.min(), ho.day.min())),
                          pd.to_datetime(max(lt.day.max(), ho.day.max())), freq="D")
     series = {}
-    for name, frame, net, px, take in [
-        ("Live, as traded (real fills)", lt, "real_net_c", "px_fill", np.ones(len(lt), bool)),
-        ("Live trades TabPFN keeps (real fills)", lt, "real_net_c", "px_fill", lt.tabpfn_keeps.to_numpy()),
-        ("TabPFN as the filter (backtest)", ho, "net_c_exits", "px", ho["take__TabPFN-3.5"].to_numpy()),
-        ("Live gate (backtest)", ho, "net_c_exits", "px", ho["take__Live gate"].to_numpy()),
+    for name, frame, net, px, take, frac in [
+        ("Live, as traded (real fills)", lt, "real_net_c", "px_fill", np.ones(len(lt), bool), bankroll.RISK),
+        ("TabPFN veto + Kelly sizing (real fills)", lt, "real_net_c", "px_fill", lt.tabpfn_keeps.to_numpy(),
+         lt["frac_kelly"].to_numpy()),
+        ("TabPFN veto, flat 15% (real fills)", lt, "real_net_c", "px_fill", lt.tabpfn_keeps.to_numpy(), bankroll.RISK),
+        ("TabPFN + Kelly (backtest)", ho, "net_c_exits", "px", ho["take__TabPFN-3.5 + Kelly"].to_numpy(),
+         ho["frac__TabPFN-3.5 + Kelly"].to_numpy()),
+        ("Live gate (backtest)", ho, "net_c_exits", "px", ho["take__Live gate"].to_numpy(), bankroll.RISK),
     ]:
-        eq = bankroll.daily_equity(frame.day, frame[net].to_numpy(), frame[px].to_numpy(), take, days)
+        eq = bankroll.daily_equity(frame.day, frame[net].to_numpy(), frame[px].to_numpy(), take, days, risk=frac)
         ts = bankroll.tear_sheet(eq, int(take.sum()), int((frame[net].to_numpy()[take] > 0).sum()))
         ts["curve"] = [[str(k.date()), round(float(v), 2)] for k, v in eq.items()]
         ts["c_per_ct"] = r(frame[net].to_numpy()[take].mean(), 2)

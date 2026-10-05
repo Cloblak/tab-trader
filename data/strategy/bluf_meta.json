@@ -26,27 +26,27 @@
   },
   "Random forest": {
    "margin_c": 0,
-   "seconds": 5.4
+   "seconds": 3.0
   },
   "XGBoost": {
    "margin_c": 0,
-   "seconds": 44.4
+   "seconds": 3.0
   },
   "LightGBM": {
    "margin_c": 3,
-   "seconds": 8.5
+   "seconds": 0.2
   },
   "CatBoost": {
    "margin_c": 0,
-   "seconds": 3.7
+   "seconds": 1.7
   },
   "MLP": {
    "margin_c": 1,
-   "seconds": 0.9
+   "seconds": 0.8
   },
   "TabPFN-3.5": {
    "margin_c": 1,
-   "seconds": 696.5
+   "seconds": 333.2
   },
   "Market price": {
    "margin_c": 2,

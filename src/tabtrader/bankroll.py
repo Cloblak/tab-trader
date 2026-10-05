@@ -18,9 +18,9 @@ ANN = 365  # crypto trades every day
 
 
 def daily_equity(day: pd.Series, net_c: np.ndarray, px_c: np.ndarray, take: np.ndarray,
-                 days: pd.DatetimeIndex | None = None, start: float = START, risk: float = RISK) -> pd.Series:
-    """Account value at the end of each day."""
-    r = np.log1p(risk * np.asarray(net_c, float) / np.asarray(px_c, float))
+                 days: pd.DatetimeIndex | None = None, start: float = START, risk=RISK) -> pd.Series:
+    """Account value at the end of each day. ``risk`` is a fraction, or one fraction per trade."""
+    r = np.log1p(np.asarray(risk, float) * np.asarray(net_c, float) / np.asarray(px_c, float))
     g = pd.Series(np.where(take, r, 0.0), index=pd.to_datetime(day)).groupby(level=0).sum()
     if days is not None:
         g = g.reindex(days, fill_value=0.0)
@@ -60,7 +60,8 @@ def run_models(df: pd.DataFrame, models: list[str], split: str | None = None,
     out = {}
     for m in models:
         take = d[f"take__{m}"].to_numpy(bool)
-        eq = daily_equity(d["day"], d[net_col].to_numpy(), d["px"].to_numpy(), take, days)
+        frac = d[f"frac__{m}"].to_numpy(float) if f"frac__{m}" in d else RISK
+        eq = daily_equity(d["day"], d[net_col].to_numpy(), d["px"].to_numpy(), take, days, risk=frac)
         ts = tear_sheet(eq, int(take.sum()), int((d[net_col].to_numpy()[take] > 0).sum()))
         ts["curve"] = [[str(k.date()), round(float(v), 2)] for k, v in eq.items()]
         ts["c_per_ct"] = round(float(d[net_col].to_numpy()[take].mean()), 2) if take.any() else None
