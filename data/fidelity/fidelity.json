@@ -13,16 +13,16 @@
   "n_paired": 385
  },
  "vs_backtest": {
-  "live_trades_with_backtest_signal": 0.9766,
+  "live_trades_with_backtest_signal": 0.9792,
   "same_side": 1.0,
   "entry_time_diff_s_median": 6.85,
   "entry_time_within_5s": 0.0,
-  "price_diff_c_mean": 2.75,
+  "price_diff_c_mean": 2.77,
   "price_diff_c_median": 0.0,
-  "price_within_1c": 0.5399,
+  "price_within_1c": 0.5385,
   "same_outcome_settled": 0.9893,
-  "n_settled": 374,
-  "n_matched": 376
+  "n_settled": 375,
+  "n_matched": 377
  },
  "execution": {
   "n_with_fills": 385,
@@ -34,11 +34,11 @@
  },
  "cents_per_contract_same_trades": {
   "backtest (recorded quotes, live exits)": {
-   "n": 376,
-   "c_per_ct": 5.0,
+   "n": 377,
+   "c_per_ct": 5.06,
    "ci95": [
-    2.03,
-    7.59
+    2.1,
+    7.63
    ]
   },
   "paper twin (live code, paper fills)": {
@@ -50,19 +50,19 @@
    ]
   },
   "live journal (quoted prices)": {
-   "n": 376,
-   "c_per_ct": 2.38,
+   "n": 377,
+   "c_per_ct": 2.43,
    "ci95": [
-    -0.36,
-    4.81
+    -0.32,
+    4.84
    ]
   },
   "live real (Kalshi fills and fees)": {
-   "n": 376,
-   "c_per_ct": 3.18,
+   "n": 377,
+   "c_per_ct": 3.23,
    "ci95": [
-    0.57,
-    5.52
+    0.6,
+    5.57
    ]
   }
  }
