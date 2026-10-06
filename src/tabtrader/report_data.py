@@ -206,4 +206,7 @@ def rolling_data() -> dict:
         series[name] = ts
     live = {"series": series, "n": int(len(lt)), "kept": int(k.sum()), "kept_c": r(lt.real_net_c[k].mean(), 2),
             "skipped_c": r(lt.real_net_c[~k].mean(), 2), "first": str(lt.day.min()), "last": str(lt.day.max())}
-    return {"meta": meta, "res": res, "auc": auc, "monthly": monthly, "live": live}
+    top = max((m for m in ROLL_MODELS), key=lambda m: res[m]["final"])
+    boot = (bankroll.boot_final_ratio(d, top, "TabPFN-3.5 + Kelly", reps=500) | {"top": top}
+            if top != "TabPFN-3.5 + Kelly" else None)
+    return {"meta": meta, "res": res, "auc": auc, "monthly": monthly, "live": live, "boot": boot}

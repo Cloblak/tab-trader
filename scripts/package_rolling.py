@@ -127,8 +127,10 @@ def main() -> None:
     pdep = d["p_deployed"].to_numpy(float)[keep]
     out["take__Live gate"] = pdep >= args.live_threshold
     out["take__Every signal"] = True
-    rng = np.random.default_rng(0)
-    order = np.lexsort((rng.random(len(out)), out["day"].to_numpy()))
+    # Rows keep their order within each day as ``seq`` (no timestamps): the capped bankroll simulation
+    # needs the sequence, and the sequence alone reveals nothing about time of day.
+    out["seq"] = out.groupby("day").cumcount()
+    order = np.arange(len(out))
     dst = ROOT / "data" / "strategy"
     out.iloc[order].reset_index(drop=True).to_parquet(dst / "rolling_predictions.parquet", index=False)
 
@@ -141,7 +143,9 @@ def main() -> None:
                        "real_net_c": live["real_net_per_ct"].round(3),
                        "tabpfn_keeps": edge_take(p_live, live["fill_entry_c"].to_numpy(float)),
                        "frac_kelly": kelly_stake(p_live, live["fill_entry_c"].to_numpy(float)).round(4)})
-    order = np.lexsort((rng.random(len(lt)), lt["day"].to_numpy()))
+    lt = lt.assign(_ts=live["entry_ts"].to_numpy()).sort_values("_ts").drop(columns="_ts").reset_index(drop=True)
+    lt["seq"] = lt.groupby("day").cumcount()
+    order = np.arange(len(lt))
     lt.iloc[order].reset_index(drop=True).to_parquet(dst / "rolling_live_trades.parquet", index=False)
     (dst / "rolling_meta.json").write_text(json.dumps(
         {"first_week": str(FIRST_WEEK.date()), "last_signal": str(end.date()), "context_weeks": CONTEXT_WEEKS,

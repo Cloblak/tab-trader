@@ -149,8 +149,10 @@ def main() -> None:
 
     # Rows within a day are shuffled so row order carries no intraday timing. Equity math in
     # tabtrader.bankroll is per day and order-independent (fractional stakes).
-    rng = np.random.default_rng(0)
-    order = np.lexsort((rng.random(len(out)), out["day"].to_numpy()))
+    # Rows keep their order within each day as ``seq`` (no timestamps): the capped bankroll simulation
+    # needs the sequence, and the sequence alone reveals nothing about time of day.
+    out["seq"] = out.groupby("day").cumcount()
+    order = np.arange(len(out))
     dst = ROOT / "data" / "strategy"
     out.iloc[order].reset_index(drop=True).to_parquet(dst / "bluf_predictions.parquet", index=False)
 
@@ -171,7 +173,9 @@ def main() -> None:
     })
     # Kelly stake on the real fill price, from TabPFN's calibrated probability for that signal.
     lt["frac_kelly"] = kelly_stake(live["market"].map(qk).to_numpy(float), live["fill_entry_c"].to_numpy(float)).round(4)
-    order = np.lexsort((rng.random(len(lt)), lt["day"].to_numpy()))
+    lt = lt.assign(_ts=live["entry_ts"].to_numpy()).sort_values("_ts").drop(columns="_ts").reset_index(drop=True)
+    lt["seq"] = lt.groupby("day").cumcount()
+    order = np.arange(len(lt))
     lt.iloc[order].reset_index(drop=True).to_parquet(dst / "live_trades.parquet", index=False)
     (dst / "bluf_meta.json").write_text(json.dumps(
         {"splits": {"train": ["2026-04-15", "2026-07-13"], "test": ["2026-07-14", "2026-09-11"],

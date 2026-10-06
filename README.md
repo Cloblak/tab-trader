@@ -1,10 +1,22 @@
+<p align="center"><img src="docs/img/banner.png" alt="tab-trader: TabPFN-3.5 deciding live Kalshi Bitcoin trades" width="100%"></p>
+
+<p align="center">
+<img alt="TabPFN-3.5" src="https://img.shields.io/badge/TabPFN-3.5-1d3a6e?style=flat-square">
+<img alt="Kalshi KXBTC15M" src="https://img.shields.io/badge/Kalshi-BTC%2015--minute-5a8fd4?style=flat-square">
+<img alt="Data since Mar 2026" src="https://img.shields.io/badge/data-recorded%20live%20since%20Mar%202026-5f6b7a?style=flat-square">
+<img alt="CPU only" src="https://img.shields.io/badge/compute-1%20CPU%2C%20no%20GPU-5f6b7a?style=flat-square">
+<img alt="Apache 2.0" src="https://img.shields.io/badge/license-Apache%202.0-5f6b7a?style=flat-square">
+</p>
+
 # tab-trader
 
 **TabPFN-3.5 deciding which Kalshi 15-minute Bitcoin trades to take, on real, messy, self-recorded market data.**
 One CPU, no training loop, no hyper-parameter tuning.
 
-**Interactive report:** [open it here](https://htmlpreview.github.io/?https://github.com/Cloblak/tab-trader/blob/main/docs/index.html)
-(source: [`docs/index.html`](docs/index.html))
+<p align="center"><img src="docs/img/scorecard.png" alt="Key numbers" width="100%"></p>
+
+**[Open the interactive report](https://htmlpreview.github.io/?https://github.com/Cloblak/tab-trader/blob/main/docs/index.html)**
+· [notebooks](notebooks/) · [data card](data/DATA_CARD.md) · [test plan](PREREG.md)
 
 <!-- DATA:START -->
 ## Why this is a real test
@@ -16,12 +28,16 @@ Nothing here is a benchmark download. Every row was recorded by my own collector
 - **Small and noisy.** My strategy produced 2,871 usable signals in five months, and only a few hundred per regime. Signals win about 77% of the time and the market price alone already ranks them at AUC 0.727, so there is little left for any model to find.
 - **Honest labels, fast.** Every contract settles at $1 or $0 within 15 minutes, so every prediction is scored against reality, and the market price is a strong baseline to beat.
 
-Small, noisy, drifting tables with a hard baseline are the setting TabPFN was built for. No synthetic data, no cleaned-up competition set.
+> [!TIP]
+> **Small, noisy, drifting tables with a hard baseline are the setting TabPFN was built for.** No synthetic data, no cleaned-up competition set.
 
 <!-- DATA:END -->
 
 <!-- RESULTS:START -->
 ## What TabPFN does well here
+
+> [!IMPORTANT]
+> **On 376 real live trades, the ones TabPFN would have kept earned +6.90¢ per contract. The ones it would have skipped earned +0.25¢.** Same signals, same fills, same fees: TabPFN's probability alone separated the trades that paid from the ones that did not.
 
 - **It ranks my live strategy's signals best.** In a weekly walk-forward (22 weeks, 2,871 signals, each week refit on the previous 12), TabPFN-3.5 separates winners from losers with AUC 0.729, against 0.725 for logistic regression and 0.688 for LightGBM. No tuning.
 - **Its veto works on real fills.** On my 376 actual live trades since 2026-09-12, the trades TabPFN would have kept (166) earned +6.90¢ per contract; the 210 it would have skipped earned +0.25¢. At 15% per trade, $100 ends at $777.72 with its veto against $568.49 as I traded.
@@ -32,24 +48,28 @@ Small, noisy, drifting tables with a hard baseline are the setting TabPFN was bu
 
 ## The full walk-forward
 
-Weekly walk-forward on my live strategy's signals, 2026-05-11 to 2026-10-05. Every Monday each model is refit on the previous 12 weeks and takes a signal only if its probability beats the price plus the fee. The rules were fixed before the run ([`PREREG.md`](PREREG.md), amendment 3). $100 to start.
+Weekly walk-forward on my live strategy's signals, 2026-05-11 to 2026-10-05. Every Monday each model is refit on the previous 12 weeks and takes a signal only if its probability beats the price plus the fee. The rules were fixed before the run ([`PREREG.md`](PREREG.md), amendment 3). $100 to start; each trade stakes 15% of the balance (or half-Kelly), never more than 500 contracts.
 
-| Trade filter | $100 becomes | Sharpe | Max drawdown | Trades | ¢ per contract |
+| Trade filter | $100 becomes | Sharpe | Max drawdown | Trades | ¢ per contract [95% range] |
 |---|---|---|---|---|---|
-| Logistic regression, half-Kelly | $80,135.53 | 6.31 | -84.5% | 1658 | +1.92 |
-| **TabPFN-3.5**, half-Kelly | $7,945.37 | 4.63 | -92.4% | 1581 | +1.63 |
-| My current filter (frozen), flat 15% | $7,222.26 | 4.33 | -88.5% | 1591 | +1.87 |
-| Logistic regression, flat 15% | $471.69 | 3.26 | -99.7% | 1658 | +1.92 |
-| LightGBM, half-Kelly | $128.79 | 2.6 | -99.8% | 2257 | +1.01 |
-| **TabPFN-3.5**, flat 15% | $32.50 | 2.19 | -99.9% | 1581 | +1.63 |
-| LightGBM, flat 15% | $8.12 | 1.84 | -100.0% | 2257 | +1.01 |
-| Take every signal, flat 15% | $0.48 | 1.98 | -100.0% | 2871 | +0.80 |
+| Logistic regression, half-Kelly | $11,926.55 | 5.24 | -84.5% | 1658 | +1.92 [+0.25, +3.55] |
+| **TabPFN-3.5**, half-Kelly | $6,557.03 | 4.59 | -92.4% | 1581 | +1.63 [+0.01, +3.19] |
+| My current filter (frozen), flat 15% | $5,683.15 | 4.27 | -88.5% | 1591 | +1.87 [+0.44, +3.37] |
+| Logistic regression, flat 15% | $536.97 | 3.31 | -99.7% | 1658 | +1.92 [+0.25, +3.55] |
+| LightGBM, half-Kelly | $128.79 | 2.6 | -99.8% | 2257 | +1.01 [-0.35, +2.27] |
+| **TabPFN-3.5**, flat 15% | $32.50 | 2.19 | -99.9% | 1581 | +1.63 [+0.01, +3.19] |
+| LightGBM, flat 15% | $8.12 | 1.84 | -100.0% | 2257 | +1.01 [-0.35, +2.27] |
+| Take every signal, flat 15% | $0.48 | 1.98 | -100.0% | 2871 | +0.80 [-0.49, +2.06] |
+
+> [!NOTE]
+> Logistic regression, half-Kelly ends 1.8× higher than TabPFN-3.5 at half-Kelly, but resampling whole days puts that ratio anywhere from **0.68× to 25.4×** (95% range). The two are not distinguishable on this sample.
 
 ![Weekly walk-forward equity curves and monthly results](docs/img/walkforward.png)
 
-July decided this table. My signal lost 4.65¢ per contract that month, and TabPFN, still learning from April to June, took 173 of 382 signals at -5.60¢ each. At a flat 15% stake no filter survived it intact; half-Kelly sizing, which bets less when the edge is thin, is what kept accounts alive.
+> [!CAUTION]
+> **July decided this table.** My signal lost 4.65¢ per contract that month, and TabPFN, still learning from April to June, took 173 of 382 signals at -5.60¢ each. At a flat 15% stake no filter survived it intact; **half-Kelly sizing, which bets less when the edge is thin, is what kept accounts alive.**
 
-Staking 15% per trade compounds fast. Read the dollar figures as a comparison between filters, not as achievable profit: Kalshi's order books are too thin for those sizes, and backtests overstate live results by a few cents per contract.
+Stakes are capped at 500 contracts, so balances grow roughly linearly once an account passes a few thousand dollars. Read the dollar figures as a comparison between filters: backtests overstate live results by a few cents per contract, and the ¢ per contract column is the size-free measure.
 
 <!-- RESULTS:END -->
 
@@ -75,6 +95,9 @@ p_hold = model.predict_proba(holdout[features])[:, 1]     # scored once, at the 
 
 Train 5,937 rows (to Aug 02), test 5,495 (to Sep 06), holdout 4,191 (to Oct 03). Full code: `python -m tabtrader.holdout run` and `notebooks/05_train_test_holdout.ipynb`.
 
+> [!TIP]
+> **Try it yourself:** upload `data/tabpfn_ready/kxbtc15m_features.csv` to the Prior Labs playground, use `target` as the label and the `split` column to separate train from holdout.
+
 **Public data, generic indicators (holdout):**
 
 | Model | Log loss | AUC | Trades | ¢ per contract [95% CI] |
@@ -85,14 +108,14 @@ Train 5,937 rows (to Aug 02), test 5,495 (to Sep 06), holdout 4,191 (to Oct 03).
 
 With only generic indicators the market price stays ahead, and neither trading result is distinguishable from zero. The same split on my strategy's signals, where the features carry real information (local TabPFN-3.5, features private; train scores are out-of-fold, the test period sets each filter's trade rule):
 
-| $100 becomes | Train (04-15 – 07-13) | Test (07-14 – 09-11) | Holdout (09-12 – 10-02) |
+| $100 becomes | Train (04-15 – 07-13) | Test (07-14 – 09-11) | Holdout (09-12 – 10-05) |
 |---|---|---|---|
-| **TabPFN-3.5**, half-Kelly | $7.89 | $30,769.79 | $1,959.72 |
-| **TabPFN-3.5**, flat 15% | $0.10 | $115,014.07 | $1,467.37 |
-| My current filter | $49.96 | $1,315.99 | $1,735.09 |
-| Random forest | $0.00 | $116,730.98 | $769.25 |
-| Logistic regression | $0.03 | $13,231.44 | $757.36 |
-| Take every signal | $0.00 | $79.83 | $352.76 |
+| **TabPFN-3.5**, half-Kelly | $7.89 | $8,179.17 | $2,778.63 |
+| **TabPFN-3.5**, flat 15% | $0.10 | $11,806.27 | $1,987.93 |
+| My current filter | $49.96 | $1,275.27 | $2,257.99 |
+| Random forest | $0.00 | $12,778.41 | $2,210.26 |
+| Logistic regression | $0.03 | $8,806.70 | $923.83 |
+| Take every signal | $0.00 | $79.83 | $1,961.82 |
 
 In spring my signal itself lost money, so every filter lost in the train period. The half-Kelly rule was picked among five TabPFN variants by test-period Sharpe, with the holdout visible at the time, so treat that row as indicative. The weekly walk-forward above is the stricter test.
 
@@ -137,10 +160,11 @@ This repo publishes everything needed to rerun the public benchmark: decision sn
 1-minute BTC prices, one raw week at 1-second resolution, and daily data-quality aggregates (see `data/DATA_CARD.md`).
 For my live strategy it publishes only model scores, decisions and outcomes, not the features.
 
-The full dataset (about 245 million rows since March 2026: tape, L2 order book, multi-venue spot, settlement index) is
-my own and is the basis of my trading strategies, so I have not made it public. If you would like to work with it, I am
-happy to talk. Please open an issue on this repo or reach me through my GitHub profile
-([@Cloblak](https://github.com/Cloblak)).
+> [!NOTE]
+> **The full dataset is available on request.** About 245 million rows since March 2026 (tape, L2 order book,
+> multi-venue spot, settlement index). It is my own and the basis of my trading strategies, so it is not public.
+> If you would like to work with it, open an issue on this repo or reach me through my GitHub profile
+> ([@Cloblak](https://github.com/Cloblak)).
 
 ## Run it
 
@@ -157,6 +181,9 @@ make analyze report          # rebuild results/summary.json and docs/index.html
 03 cleaning and features, 04 the benchmark.
 
 ## Limits
+
+> [!WARNING]
+> These are research results, not trading advice. Backtests overstate live results by a few cents per contract.
 
 - The strategy section uses my own signals; its features are private, so it can be checked but not rerun from this repo.
 - Earlier research of mine looked at some of these weeks, so the next step is a live forward test.

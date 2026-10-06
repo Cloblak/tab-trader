@@ -10,19 +10,19 @@
   ],
   "holdout": [
    "2026-09-12",
-   "2026-10-02"
+   "2026-10-05"
   ]
  },
  "n": {
   "train": 2058,
   "test": 938,
-  "holdout": 556
+  "holdout": 596
  },
  "n_features_private": 33,
  "models": {
   "Logistic regression": {
    "margin_c": 0,
-   "seconds": 0.2
+   "seconds": 0.1
   },
   "Random forest": {
    "margin_c": 0,
@@ -30,7 +30,7 @@
   },
   "XGBoost": {
    "margin_c": 0,
-   "seconds": 3.0
+   "seconds": 3.4
   },
   "LightGBM": {
    "margin_c": 3,
@@ -46,12 +46,12 @@
   },
   "TabPFN-3.5": {
    "margin_c": 1,
-   "seconds": 333.2
+   "seconds": 345.7
   },
   "Market price": {
    "margin_c": 2,
    "seconds": 0.0
   }
  },
- "live_trades": 345
+ "live_trades": 376
 }

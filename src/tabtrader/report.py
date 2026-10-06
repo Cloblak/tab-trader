@@ -132,6 +132,11 @@ def page(fragment: bool = False) -> str:
         f"<tr class='{'tab' if m.startswith('TabPFN') else ''}'><td>{E(snames.get(m, m))}</td>"
         + "".join(f"<td class='num'>{usd(sres[sp_][m]['final'])}</td>" for sp_ in ("train", "test", "holdout")) + "</tr>"
         for m in srows)
+    bt = ro.get("boot")
+    boot_txt = (f" {E(names.get(bt['top'], bt['top']))[0].upper() + E(names.get(bt['top'], bt['top']))[1:]} ends "
+                f"{res[bt['top']]['final'] / res['TabPFN-3.5 + Kelly']['final']:.1f}× higher than TabPFN-3.5 at half-Kelly, but the "
+                f"95% range of that ratio runs from {bt['lo']:.2f}× to {bt['hi']:.1f}×, so the two are not distinguishable."
+                if bt else "")
     head = "<title>tab-trader</title><style>" + CSS + "</style>"
     body = f"""
 <div class="top"><div class="wrap">
@@ -162,7 +167,8 @@ in spring and then frozen. The rules were written down before the test ran
 <p class="what"><b>What it shows:</b> account value from $100, on a log scale, over {meta['weeks']} test weeks. Higher is better.</p></figure>
 <figure><div class="tw" id="ts-table"></div>
 <p class="what"><b>What it shows:</b> the same runs as numbers. "Calibrated" rows add an isotonic correction learned from each model's
-own predictions in the previous four weeks. Sharpe and Sortino use daily returns annualised over 365 days.</p></figure>
+own predictions in the previous four weeks. Sharpe and Sortino use daily returns annualised over 365 days. The 95% ranges come from
+resampling whole days.{boot_txt}</p></figure>
 <figure><div id="mo-bars"></div><div class="legend"><span><i style="border-top-color:var(--classic)"></i>Take every signal</span><span><i style="border-top-color:var(--c1)"></i>TabPFN-3.5</span></div>
 <p class="what"><b>What it shows:</b> profit per contract by month, for every signal and for the signals TabPFN took. TabPFN added
 value in August and September; in July, when the signal broke down, it did not.</p></figure>
@@ -170,9 +176,10 @@ value in August and September; in July, when the signal broke down, it did not.<
 <figure><div class="legend" id="live-legend"></div><div id="live-chart"></div>
 <p class="what"><b>What it shows:</b> my actual live trades with real Kalshi fills. Gray is what I traded; navy is the same trades with
 TabPFN's veto ({usd(veto['final'])} vs {usd(real['final'])} at the end).</p></figure>
-<div class="note"><b>How to read the dollar figures.</b> Staking 15% of the account per trade compounds fast in both directions. The dollar
-amounts compare the filters; they are not profits anyone could collect, because Kalshi's order books are far too thin for those sizes.
-The backtest also overstates live results by about {gap:.1f}¢ per contract (section 5). The ¢ per contract column is the size-free measure.</div>
+<div class="note"><b>How to read the dollar figures.</b> Each trade stakes 15% of the balance (or half-Kelly) but never more than
+500 contracts, a stand-in for the depth of Kalshi's order book, so balances grow roughly linearly past a few thousand dollars. The
+dollar amounts compare the filters. The backtest also overstates live results by about {gap:.1f}¢ per contract (section 5); the ¢ per
+contract column is the size-free measure.</div>
 
 <h2>2. Train, test, holdout: the playground recipe</h2>
 <p>The same steps as the Prior Labs playground, with one change that matters for markets: the split is by time. A random
