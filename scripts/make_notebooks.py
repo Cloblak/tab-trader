@@ -450,3 +450,56 @@ ax.set_ylabel("account value ($)"); ax.legend(); plt.tight_layout()
 k = lt.tabpfn_keeps
 print(f"{len(lt)} live trades; TabPFN keeps {k.sum()}: kept {lt.real_net_c[k].mean():+.2f} ¢/ct, skipped {lt.real_net_c[~k].mean():+.2f} ¢/ct")"""),
 ])
+
+# --------------------------------------------------------------------------- 05
+write("05_train_test_holdout.ipynb", [
+    md("""
+# 05 · Train, test, holdout with the TabPFN API (the playground recipe)
+
+The same steps as the Prior Labs playground, on the public, playground-ready table
+`data/tabpfn_ready/kxbtc15m_features.csv`. One change matters: the split is **by time**. A random
+`train_test_split` would let the model learn from the future.
+
+| split | period | used for |
+|---|---|---|
+| train | Jun 7 – Aug 2 | fitting |
+| test | Aug 3 – Sep 6 | picking the trading margin, once |
+| holdout | Sep 7 – Oct 3 | scored once, at the end |
+
+Needs `TABPFN_TOKEN` (free at https://ux.priorlabs.ai). Only public data is sent to the API.
+"""),
+    code(SETUP),
+    code("""
+import os, tabpfn_client
+from tabpfn_client import TabPFNClassifier
+tabpfn_client.set_access_token(os.environ["TABPFN_TOKEN"])
+
+df = pd.read_csv(ROOT / "data" / "tabpfn_ready" / "kxbtc15m_features.csv")
+features = [c for c in df.columns if c not in ("decision_ts", "split", "market", "bid", "ask", "target")]
+train, test, holdout = (df[df.split == s] for s in ("train", "test", "holdout"))
+print({s: len(x) for s, x in zip(("train", "test", "holdout"), (train, test, holdout))}, len(features), "features")"""),
+    code("""
+model = TabPFNClassifier(model_path="v3.5_default", n_estimators=8)
+model.fit(train[features], train["target"])
+p_test = model.predict_proba(test[features])[:, 1]
+p_hold = model.predict_proba(holdout[features])[:, 1]"""),
+    code("""
+from tabtrader.evaluate import metrics
+from tabtrader.holdout import trade, _trade_frame
+rows = {}
+for name, pt, ph in [("TabPFN-3.5 (API)", p_test, p_hold), ("Market price", test.p_mid.values, holdout.p_mid.values)]:
+    rows[name] = {**{f"holdout {k}": v for k, v in metrics(holdout.target, ph).items() if k != "n"},
+                  **trade(_trade_frame(test), _trade_frame(holdout), pt, ph)}
+pd.DataFrame(rows).T"""),
+    md("""
+### The same split on my strategy's signals (local TabPFN-3.5, private features)
+
+Train scores are out-of-fold; the test period sets each filter's trade rule; the holdout is the weeks I traded live.
+"""),
+    code("""
+from tabtrader import bankroll
+d = pd.read_parquet(ROOT / "data" / "strategy" / "bluf_predictions.parquet")
+rows = ["TabPFN-3.5 + Kelly", "TabPFN-3.5", "Live gate", "Random forest", "Logistic regression", "Every signal"]
+pd.DataFrame({s: {m: r["final"] for m, r in bankroll.run_models(d, rows, s).items()}
+              for s in ("train", "test", "holdout")}).round(2)"""),
+])

@@ -82,6 +82,60 @@ def bench_line_items() -> list[str]:
             f"({'; '.join(bits)}). No model beats the market price itself on prediction error."]
 
 
+def holdout_block() -> list[str]:
+    r = json.loads((ROOT / "results" / "holdout_api.json").read_text())
+    sp = r["splits"]
+    out = ["## Train, test, holdout with the TabPFN API", "",
+           "The Prior Labs playground recipe, applied to market data. One change matters: the split is by time. A random "
+           "`train_test_split` would let the model learn from the future.", "",
+           "```python",
+           "import os, pandas as pd, tabpfn_client",
+           "from tabpfn_client import TabPFNClassifier",
+           "",
+           'tabpfn_client.set_access_token(os.environ["TABPFN_TOKEN"])',
+           'df = pd.read_csv("data/tabpfn_ready/kxbtc15m_features.csv")   # public, playground-ready',
+           'features = [c for c in df.columns if c not in ("decision_ts", "split", "market", "bid", "ask", "target")]',
+           'train, test, holdout = (df[df.split == s] for s in ("train", "test", "holdout"))',
+           "",
+           'model = TabPFNClassifier(model_path="v3.5_default", n_estimators=8)',
+           'model.fit(train[features], train["target"])',
+           "p_test = model.predict_proba(test[features])[:, 1]        # used once, to pick the trading margin",
+           "p_hold = model.predict_proba(holdout[features])[:, 1]     # scored once, at the end",
+           "```", "",
+           f"Train {sp['train']['rows']:,} rows (to {pd.Timestamp(sp['train']['to']) - pd.Timedelta(days=1):%b %d}), "
+           f"test {sp['test']['rows']:,} (to {pd.Timestamp(sp['test']['to']) - pd.Timedelta(days=1):%b %d}), "
+           f"holdout {sp['holdout']['rows']:,} (to {pd.Timestamp(sp['holdout']['to']) - pd.Timedelta(days=1):%b %d}). "
+           "Full code: `python -m tabtrader.holdout run` and `notebooks/05_train_test_holdout.ipynb`.", "",
+           "**Public data, generic indicators (holdout):**", "",
+           "| Model | Log loss | AUC | Trades | ¢ per contract [95% CI] |", "|---|---|---|---|---|"]
+    for m, v in sorted(r["models"].items(), key=lambda kv: kv[1]["holdout"]["logloss"]):
+        t = v["trading_holdout"]
+        tr = (f"{t['trades']} | {t['c_per_ct']:+.2f} [{t['ci95'][0]:+.1f}, {t['ci95'][1]:+.1f}]" if t.get("trades")
+              else "0 | no trade cleared price + fee")
+        name = f"**{m}**" if m.startswith("TabPFN") else m
+        out.append(f"| {name} | {v['holdout']['logloss']:.4f} | {v['holdout']['auc']:.4f} | {tr} |")
+    out += ["", "With only generic indicators the market price stays ahead, and neither trading result is distinguishable from zero. The same "
+            "split on my strategy's signals, where the features carry real information (local TabPFN-3.5, features "
+            "private; train scores are out-of-fold, the test period sets each filter's trade rule):", ""]
+    d = pd.read_parquet(DATA / "strategy" / "bluf_predictions.parquet")
+    meta = json.loads((DATA / "strategy" / "bluf_meta.json").read_text())
+    rows = ["TabPFN-3.5 + Kelly", "TabPFN-3.5", "Live gate", "Random forest", "Logistic regression", "Every signal"]
+    res = {s_: bankroll.run_models(d, rows, s_) for s_ in ("train", "test", "holdout")}
+    names = {"TabPFN-3.5 + Kelly": "**TabPFN-3.5**, half-Kelly", "TabPFN-3.5": "**TabPFN-3.5**, flat 15%",
+             "Live gate": "My current filter", "Random forest": "Random forest", "Logistic regression": "Logistic regression",
+             "Every signal": "Take every signal"}
+    out += [f"| $100 becomes | Train ({meta['splits']['train'][0][5:]} – {meta['splits']['train'][1][5:]}) | "
+            f"Test ({meta['splits']['test'][0][5:]} – {meta['splits']['test'][1][5:]}) | "
+            f"Holdout ({meta['splits']['holdout'][0][5:]} – {meta['splits']['holdout'][1][5:]}) |", "|---|---|---|---|"]
+    for m in rows:
+        out.append(f"| {names[m]} | " + " | ".join(f"${res[s_][m]['final']:,.2f}" for s_ in ("train", "test", "holdout"))
+                   + " |")
+    out += ["", "In spring my signal itself lost money, so every filter lost in the train period. The half-Kelly rule was "
+            "picked among five TabPFN variants by test-period Sharpe, with the holdout visible at the time, so treat that row "
+            "as indicative. The weekly walk-forward above is the stricter test.", ""]
+    return out
+
+
 def _put(s: str, tag: str, block: str) -> str:
     return re.sub(rf"<!-- {tag}:START -->.*<!-- {tag}:END -->",
                   lambda _: f"<!-- {tag}:START -->\n{block}\n<!-- {tag}:END -->", s, flags=re.S)
@@ -93,6 +147,9 @@ def main() -> None:
     s = p.read_text()
     s = _put(s, "DATA", "\n".join(data_block()))
     s = _put(s, "RESULTS", "\n".join(rolling_block()))
+    if "<!-- HOLDOUT:START -->" not in s:
+        s = s.replace("<!-- RESULTS:END -->", "<!-- RESULTS:END -->\n\n<!-- HOLDOUT:START -->\n<!-- HOLDOUT:END -->", 1)
+    s = _put(s, "HOLDOUT", "\n".join(holdout_block()))
     p.write_text(s)
     print("README data + results blocks and docs/img figures updated")
 
@@ -211,19 +268,23 @@ def figures() -> None:
     days = pd.date_range(lt.day.min(), lt.day.max())
     k = lt.tabpfn_keeps.to_numpy()
     fig, ax = plt.subplots(figsize=(10, 3.4))
+    curves = {}
     for lab, take, frac, col, lw in [("As I traded (flat 15%)", np.ones(len(lt), bool), bankroll.RISK, MID, 2.0),
                                      ("With TabPFN's veto, flat 15%", k, bankroll.RISK, NAVY, 2.6),
                                      ("With TabPFN's veto, half-Kelly", k, lt.frac_kelly.to_numpy(), STEEL, 1.8)]:
         eq = bankroll.daily_equity(lt.day, lt.real_net_c.to_numpy(), lt.px_fill.to_numpy(), take, days, risk=frac)
+        curves[lab] = eq
         ax.plot(eq.index, eq.values, color=col, lw=lw, label=f"{lab}  (${eq.iloc[-1]:,.0f})")
     ax.axhline(100, color=INK, lw=0.8, alpha=0.5)
     ax.yaxis.set_major_formatter(money)
     ax.set_ylabel("account value")
     ax.xaxis.set_major_locator(mdates.DayLocator(interval=3))
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
-    last = days[-1]
-    ax.annotate("one bad day (Oct 2)", xy=(last, 330), xytext=(last - pd.Timedelta(days=4.5), 160),
-                fontsize=8.3, color=GRAY, arrowprops={"arrowstyle": "->", "color": GRAY, "lw": 0.8})
+    bad = pd.Timestamp("2026-10-02")
+    if bad in curves["As I traded (flat 15%)"].index:
+        yb = float(curves["As I traded (flat 15%)"].loc[bad])
+        ax.annotate("one bad day (Oct 2)", xy=(bad, yb), xytext=(bad - pd.Timedelta(days=5), yb * 0.45),
+                    fontsize=8.3, color=GRAY, arrowprops={"arrowstyle": "->", "color": GRAY, "lw": 0.8})
     ax.set_title(f"Real Kalshi fills: my {len(lt)} live trades since {lt.day.min()}", loc="left", fontsize=10.5, color=INK)
     ax.legend(loc="upper left", fontsize=8.3, frameon=False)
     fig.tight_layout()

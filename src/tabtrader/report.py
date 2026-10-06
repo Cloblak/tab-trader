@@ -113,6 +113,25 @@ def page(fragment: bool = False) -> str:
                     + ". With labels drawn from the market price itself, "
                     + ("no model found fake skill." if not fake else f"{', '.join(fake)} showed fake skill.") + "</p>")
 
+    hr = json.loads((ROOT / "results" / "holdout_api.json").read_text())
+    ho_rows = ""
+    for m, v in sorted(hr["models"].items(), key=lambda kv: kv[1]["holdout"]["logloss"]):
+        t = v["trading_holdout"]
+        tr = (f"<td class='num'>{t['trades']}</td><td class='num'>{t['c_per_ct']:+.2f} [{t['ci95'][0]:+.1f}, {t['ci95'][1]:+.1f}]</td>"
+              if t.get("trades") else "<td class='num'>0</td><td>no trade cleared price + fee</td>")
+        ho_rows += (f"<tr class='{'tab' if m.startswith('TabPFN') else ''}'><td>{E(m)}</td><td class='num'>"
+                    f"{v['holdout']['logloss']:.4f}</td><td class='num'>{v['holdout']['auc']:.4f}</td>{tr}</tr>")
+    import pandas as _pd
+    from . import bankroll as _bk
+    bd = _pd.read_parquet(ROOT / "data" / "strategy" / "bluf_predictions.parquet")
+    srows = ["TabPFN-3.5 + Kelly", "TabPFN-3.5", "Live gate", "Random forest", "Logistic regression", "Every signal"]
+    sres = {sp_: _bk.run_models(bd, srows, sp_) for sp_ in ("train", "test", "holdout")}
+    snames = {"TabPFN-3.5 + Kelly": "TabPFN-3.5, half-Kelly", "TabPFN-3.5": "TabPFN-3.5, flat 15%",
+              "Live gate": "My current filter", "Every signal": "Take every signal"}
+    split_rows = "".join(
+        f"<tr class='{'tab' if m.startswith('TabPFN') else ''}'><td>{E(snames.get(m, m))}</td>"
+        + "".join(f"<td class='num'>{usd(sres[sp_][m]['final'])}</td>" for sp_ in ("train", "test", "holdout")) + "</tr>"
+        for m in srows)
     head = "<title>tab-trader</title><style>" + CSS + "</style>"
     body = f"""
 <div class="top"><div class="wrap">
@@ -126,8 +145,8 @@ TabPFN decides which trades to take. One CPU, no training loop, no tuning.</p>
 <h2>1. The strategy: TabPFN as a weekly-refit trade filter</h2>
 <p>The table and chart below show every filter, including the ones that beat TabPFN.</p>
 <div class="note"><b>Private features.</b> This section uses my live strategy's real signals and its own 32 features, which are not
-published. The repo contains each model's scores, decisions and outcomes, so the results can be checked. Everything from section 2
-on uses public data and generic indicators.</div>
+published. The repo contains each model's scores, decisions and outcomes, so the results can be checked. The public-data
+results (sections 2, 3 and 6) use only generic indicators.</div>
 <ol>
 <li>A momentum signal from my live strategy proposes a trade a few times an hour.</li>
 <li>Every Monday, TabPFN-3.5 reads the previous {meta['context_weeks']} weeks of signals and their outcomes as context. It is not
@@ -153,9 +172,25 @@ value in August and September; in July, when the signal broke down, it did not.<
 TabPFN's veto ({usd(veto['final'])} vs {usd(real['final'])} at the end).</p></figure>
 <div class="note"><b>How to read the dollar figures.</b> Staking 15% of the account per trade compounds fast in both directions. The dollar
 amounts compare the filters; they are not profits anyone could collect, because Kalshi's order books are far too thin for those sizes.
-The backtest also overstates live results by about {gap:.1f}¢ per contract (section 4). The ¢ per contract column is the size-free measure.</div>
+The backtest also overstates live results by about {gap:.1f}¢ per contract (section 5). The ¢ per contract column is the size-free measure.</div>
 
-<h2>2. The data: real and messy</h2>
+<h2>2. Train, test, holdout: the playground recipe</h2>
+<p>The same steps as the Prior Labs playground, with one change that matters for markets: the split is by time. A random
+split would let the model learn from the future. The table it runs on is public and playground-ready
+(<code>data/tabpfn_ready/kxbtc15m_features.csv</code>).</p>
+<pre>model = TabPFNClassifier(model_path="v3.5_default", n_estimators=8)
+model.fit(train[features], train["target"])          # Jun 7 – Aug 2
+p_test = model.predict_proba(test[features])[:, 1]   # Aug 3 – Sep 6: pick the trading margin, once
+p_hold = model.predict_proba(holdout[features])[:, 1]  # Sep 7 – Oct 3: scored once</pre>
+<div class="tw"><table><thead><tr><th>Public data, holdout</th><th>Log loss</th><th>AUC</th><th>Trades</th><th>¢ per contract [95% CI]</th></tr></thead><tbody>{ho_rows}</tbody></table></div>
+<p>With generic indicators the market price stays ahead. On my strategy's signals, where the features carry real information,
+the same three-way split looks like this (local TabPFN-3.5; train scores are out-of-fold):</p>
+<div class="tw"><table><thead><tr><th>$100 becomes</th><th>Train (Apr 15 – Jul 13)</th><th>Test (Jul 14 – Sep 11)</th><th>Holdout (Sep 12 – Oct 2)</th></tr></thead><tbody>{split_rows}</tbody></table></div>
+<p class="small">In spring my signal itself lost money, so every filter lost in the train period. The half-Kelly rule was picked among
+five TabPFN variants by test-period Sharpe with the holdout visible, so treat that row as indicative; the weekly walk-forward in
+section 1 is the stricter test.</p>
+
+<h2>3. The data: real and messy</h2>
 <div class="tiles">
 <div class="tile"><div class="v">{tot['tape_15m_rows']/1e6:.1f}M</div><div class="k">15-minute market rows, about 4 per second</div></div>
 <div class="tile"><div class="v">{tot['order_book_rows']/1e6:.0f}M</div><div class="k">full order-book snapshots</div></div>
@@ -174,14 +209,14 @@ beating its price is hard.</p></figure>
 <div class="tw"><table><thead><tr><th>Since</th><th>Recorded</th></tr></thead><tbody>{milestones}</tbody></table></div>
 <figure><div id="eda-daily"></div><p class="what"><b>What it shows:</b> rows recorded per day.</p></figure></details>
 
-<h2>3. The markets</h2>
+<h2>4. The markets</h2>
 <p>A KXBTC15M contract asks whether BTC will finish a 15-minute window higher than it started; KXBTCD asks whether BTC will be above a
 strike at the top of the hour. Both pay $1 and settle on the CF Benchmarks BRTI index. Buying costs the ask plus a fee of
 0.07 × price × (1 − price), {fee_c(50):.2f}¢ at 50¢.</p>
 <figure><div class="controls"><div id="ex-mode"></div><label for="ex-day">day</label><select id="ex-day"></select><label for="ex-market">market</label><select id="ex-market"></select></div>
 <div id="ex-chart"></div><div id="ex-chart2"></div><p class="what" id="ex-cap"></p></figure>
 
-<h2>4. Backtest vs live</h2>
+<h2>5. Backtest vs live</h2>
 <div class="tiles">
 <div class="tile"><div class="v">{100*vt['live_trades_also_taken_by_twin']:.0f}%</div><div class="k">of live trades match the paper twin exactly</div></div>
 <div class="tile"><div class="v">{100*vb['live_trades_with_backtest_signal']:.1f}%</div><div class="k">of live trades also appear in the backtest</div></div>
@@ -192,7 +227,7 @@ strike at the top of the hour. Both pay $1 and settle on the CF Benchmarks BRTI 
 <p>The backtest picks the same trades as live. The gap is price: live orders arrive about {vb['entry_time_diff_s_median']:.0f} s
 later and pay a little more, so the backtest overstates profit by about {gap:.1f}¢ per contract.</p>
 
-<h2>5. Public benchmark: generic indicators, anyone can rerun it</h2>
+<h2>6. Public benchmark: generic indicators, anyone can rerun it</h2>
 <p>Every model gets the same {sum(len(v) for v in FEATURE_GROUPS.values())} textbook indicators and the same 5,000 most recent rows,
 in weekly walk-forward tests (9 weeks on the 15-minute market, 6 on the hourly ladder). The six classic models are tuned; TabPFN is
 not. Lower log loss means better probabilities.</p>
@@ -214,7 +249,7 @@ are weak.</p></figure></details>
 <div class="tw"><table><thead><tr><th>Market</th><th>Model</th><th>Log loss</th><th>AUC</th></tr></thead><tbody>{th_rows}</tbody></table></div>
 {ctrl_txt}
 
-<h2>6. Conclusion</h2>
+<h2>7. Conclusion</h2>
 <ul>{''.join(f'<li>{c}</li>' for c in concl)}</ul>
 <h3>About the data</h3>
 <p>The repo publishes everything needed to rerun the public benchmark, and the scores, decisions and outcomes behind section 1. The full

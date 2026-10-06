@@ -1,68 +1,68 @@
 {
  "period": [
   "2026-09-12",
-  "2026-10-02"
+  "2026-10-05"
  ],
- "live_trades": 350,
- "live_days": 21,
+ "live_trades": 385,
+ "live_days": 24,
  "vs_paper_twin": {
   "live_trades_also_taken_by_twin": 1.0,
   "same_side": 1.0,
   "same_outcome": 1.0,
-  "same_exit_reason": 0.9943,
-  "n_paired": 350
+  "same_exit_reason": 0.9948,
+  "n_paired": 385
  },
  "vs_backtest": {
-  "live_trades_with_backtest_signal": 0.9857,
+  "live_trades_with_backtest_signal": 0.9766,
   "same_side": 1.0,
-  "entry_time_diff_s_median": 6.86,
+  "entry_time_diff_s_median": 6.85,
   "entry_time_within_5s": 0.0,
-  "price_diff_c_mean": 2.94,
-  "price_diff_c_median": 1.0,
-  "price_within_1c": 0.5304,
-  "same_outcome_settled": 0.9912,
-  "n_settled": 340,
-  "n_matched": 345
+  "price_diff_c_mean": 2.75,
+  "price_diff_c_median": 0.0,
+  "price_within_1c": 0.5399,
+  "same_outcome_settled": 0.9893,
+  "n_settled": 374,
+  "n_matched": 376
  },
  "execution": {
-  "n_with_fills": 350,
-  "entry_slippage_c_mean": -0.18,
+  "n_with_fills": 385,
+  "entry_slippage_c_mean": -0.22,
   "entry_slippage_c_median": 0.0,
-  "entry_slippage_within_1c": 0.5514,
-  "journal_fee_c_per_ct": 1.73,
-  "kalshi_fee_c_per_ct": 1.19
+  "entry_slippage_within_1c": 0.5506,
+  "journal_fee_c_per_ct": 1.72,
+  "kalshi_fee_c_per_ct": 1.18
  },
  "cents_per_contract_same_trades": {
   "backtest (recorded quotes, live exits)": {
-   "n": 345,
-   "c_per_ct": 5.19,
+   "n": 376,
+   "c_per_ct": 5.0,
    "ci95": [
-    2.56,
-    7.48
+    2.03,
+    7.59
    ]
   },
   "paper twin (live code, paper fills)": {
-   "n": 350,
-   "c_per_ct": 1.98,
+   "n": 385,
+   "c_per_ct": 2.53,
    "ci95": [
-    -0.91,
-    4.33
+    -0.16,
+    4.9
    ]
   },
   "live journal (quoted prices)": {
-   "n": 345,
-   "c_per_ct": 1.93,
+   "n": 376,
+   "c_per_ct": 2.38,
    "ci95": [
-    -1.01,
-    4.32
+    -0.36,
+    4.81
    ]
   },
   "live real (Kalshi fills and fees)": {
-   "n": 345,
-   "c_per_ct": 2.69,
+   "n": 376,
+   "c_per_ct": 3.18,
    "ci95": [
-    -0.12,
-    5.0
+    0.57,
+    5.52
    ]
   }
  }
