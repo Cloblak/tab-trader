@@ -23,9 +23,9 @@ One CPU, no training loop, no hyper-parameter tuning.
 
 Nothing here is a benchmark download. Every row was recorded by my own collectors while the markets traded, and my strategy trades on it with real money.
 
-- **Real.** 245 million rows since 2026-03-21: quotes four times a second, the full order book, spot prices from four exchanges and the settlement index. Kalshi keeps only about two months of history, so most of this exists nowhere else. Since 2026-09-12 the strategy has traded it with real money: 377 trades with real fills and fees.
+- **Real.** 245 million rows since 2026-03-21: quotes four times a second, the full order book, spot prices from four exchanges and the settlement index. Kalshi keeps only about two months of history, so most of this exists nowhere else. Since 2026-09-12 the strategy has traded it with real money: 395 trades with real fills and fees.
 - **Messy.** Before a collector rewrite on 30 July only 60% of quotes were clean, and 3% of rows showed impossible crossed books (after it: 96% clean, none crossed). In July only 16% of the hourly ladder's recorded quotes matched the exchange's own records. There are outages, stale quotes and a regime change mid-sample. Every price used here is checked against Kalshi's candles.
-- **Small and noisy.** My strategy produced 2,874 usable signals in five months, and only a few hundred per regime. Signals win about 77% of the time and the market price alone already ranks them at AUC 0.727, so there is little left for any model to find.
+- **Small and noisy.** My strategy produced 2,905 usable signals in five months, and only a few hundred per regime. Signals win about 77% of the time and the market price alone already ranks them at AUC 0.728, so there is little left for any model to find.
 - **Honest labels, fast.** Every contract settles at $1 or $0 within 15 minutes, so every prediction is scored against reality, and the market price is a strong baseline to beat.
 
 > [!TIP]
@@ -37,10 +37,10 @@ Nothing here is a benchmark download. Every row was recorded by my own collector
 ## What TabPFN does well here
 
 > [!IMPORTANT]
-> **On 377 real live trades, the ones TabPFN would have kept earned +6.90¢ per contract. The ones it would have skipped earned +0.35¢.** Same signals, same fills, same fees: TabPFN's probability alone separated the trades that paid from the ones that did not.
+> **On 395 real live trades, the ones TabPFN would have kept earned +6.33¢ per contract. The ones it would have skipped earned -0.31¢.** Same signals, same fills, same fees: TabPFN's probability alone separated the trades that paid from the ones that did not.
 
-- **It ranks my live strategy's signals best.** In a weekly walk-forward (22 weeks, 2,874 signals, each week refit on the previous 12), TabPFN-3.5 separates winners from losers with AUC 0.729, against 0.724 for logistic regression and 0.688 for LightGBM. No tuning.
-- **Its veto works on real fills.** On my 377 actual live trades since 2026-09-12, the trades TabPFN would have kept (166) earned +6.90¢ per contract; the 211 it would have skipped earned +0.35¢. At 15% per trade, $100 ends at $777.72 with its veto against $591.22 as I traded.
+- **It ranks my live strategy's signals best.** In a weekly walk-forward (22 weeks, 2,905 signals, each week refit on the previous 12), TabPFN-3.5 separates winners from losers with AUC 0.732, against 0.726 for logistic regression and 0.686 for LightGBM. No tuning.
+- **Its veto works on real fills.** On my 395 actual live trades since 2026-09-12, the trades TabPFN would have kept (171) earned +6.33¢ per contract; the 224 it would have skipped earned -0.31¢. At 15% per trade, $100 ends at $655.25 with its veto against $370.65 as I traded.
 
 ![Real fills with and without TabPFN's veto](docs/img/live_fills.png)
 
@@ -48,26 +48,26 @@ Nothing here is a benchmark download. Every row was recorded by my own collector
 
 ## The full walk-forward
 
-Weekly walk-forward on my live strategy's signals, 2026-05-11 to 2026-10-06. Every Monday each model is refit on the previous 12 weeks and takes a signal only if its probability beats the price plus the fee. The rules were fixed before the run ([`PREREG.md`](PREREG.md), amendment 3). $100 to start; each trade stakes 15% of the balance (or half-Kelly), never more than 500 contracts.
+Weekly walk-forward on my live strategy's signals, 2026-05-11 to 2026-10-07. Every Monday each model is refit on the previous 12 weeks and takes a signal only if its probability beats the price plus the fee. The rules were fixed before the run ([`PREREG.md`](PREREG.md), amendment 3). $100 to start; each trade stakes 15% of the balance (or half-Kelly), never more than 500 contracts.
 
 | Trade filter | $100 becomes | Sharpe | Max drawdown | Trades | ¢ per contract [95% range] |
 |---|---|---|---|---|---|
-| Logistic regression, half-Kelly | $12,356.55 | 5.25 | -84.5% | 1660 | +1.97 [+0.35, +3.61] |
-| **TabPFN-3.5**, half-Kelly | $6,987.03 | 4.62 | -92.4% | 1583 | +1.68 [+0.00, +3.25] |
-| My current filter (frozen), flat 15% | $5,683.15 | 4.25 | -88.5% | 1591 | +1.87 [+0.44, +3.37] |
-| Logistic regression, flat 15% | $692.99 | 3.41 | -99.7% | 1660 | +1.97 [+0.35, +3.61] |
-| LightGBM, half-Kelly | $163.21 | 2.7 | -99.8% | 2260 | +1.04 [-0.27, +2.35] |
-| **TabPFN-3.5**, flat 15% | $41.94 | 2.29 | -99.9% | 1583 | +1.68 [+0.00, +3.25] |
-| LightGBM, flat 15% | $10.28 | 1.93 | -100.0% | 2260 | +1.04 [-0.27, +2.35] |
-| Take every signal, flat 15% | $0.61 | 2.04 | -100.0% | 2874 | +0.83 [-0.48, +2.08] |
+| Logistic regression, half-Kelly | $12,269.29 | 4.96 | -88.0% | 1693 | +2.26 [+0.70, +3.85] |
+| **TabPFN-3.5**, half-Kelly | $9,430.64 | 4.89 | -87.3% | 1593 | +2.31 [+0.89, +3.73] |
+| My current filter (frozen), flat 15% | $5,528.15 | 4.22 | -88.5% | 1623 | +1.81 [+0.39, +3.30] |
+| Logistic regression, flat 15% | $2,684.68 | 3.94 | -99.3% | 1693 | +2.26 [+0.70, +3.85] |
+| **TabPFN-3.5**, flat 15% | $687.51 | 3.14 | -99.4% | 1593 | +2.31 [+0.89, +3.73] |
+| LightGBM, half-Kelly | $27.43 | 2.15 | -99.9% | 2287 | +1.08 [-0.31, +2.50] |
+| LightGBM, flat 15% | $12.98 | 2.15 | -99.9% | 2287 | +1.08 [-0.31, +2.50] |
+| Take every signal, flat 15% | $0.29 | 1.87 | -100.0% | 2905 | +0.77 [-0.56, +2.09] |
 
 > [!NOTE]
-> Logistic regression, half-Kelly ends 1.8× higher than TabPFN-3.5 at half-Kelly, but resampling whole days puts that ratio anywhere from **0.87× to 25.7×** (95% range). The two are not distinguishable on this sample.
+> Logistic regression, half-Kelly ends 1.3× higher than TabPFN-3.5 at half-Kelly, but resampling whole days puts that ratio anywhere from **0.43× to 6.8×** (95% range). The two are not distinguishable on this sample.
 
 ![Weekly walk-forward equity curves and monthly results](docs/img/walkforward.png)
 
 > [!CAUTION]
-> **July decided this table.** My signal lost 4.65¢ per contract that month, and TabPFN, still learning from April to June, took 173 of 382 signals at -5.60¢ each. At a flat 15% stake no filter survived it intact; **half-Kelly sizing, which bets less when the edge is thin, is what kept accounts alive.**
+> **July decided this table.** My signal lost 4.65¢ per contract that month, and TabPFN, still learning from April to June, took 168 of 382 signals at -5.09¢ each. At a flat 15% stake no filter survived it intact; **half-Kelly sizing, which bets less when the edge is thin, is what kept accounts alive.**
 
 Stakes are capped at 500 contracts, so balances grow roughly linearly once an account passes a few thousand dollars. Read the dollar figures as a comparison between filters: backtests overstate live results by a few cents per contract, and the ¢ per contract column is the size-free measure.
 
