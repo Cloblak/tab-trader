@@ -1,68 +1,68 @@
 {
  "period": [
   "2026-09-12",
-  "2026-10-11"
+  "2026-10-13"
  ],
- "live_trades": 468,
- "live_days": 30,
+ "live_trades": 485,
+ "live_days": 32,
  "vs_paper_twin": {
   "live_trades_also_taken_by_twin": 1.0,
   "same_side": 1.0,
   "same_outcome": 1.0,
-  "same_exit_reason": 0.9915,
-  "n_paired": 468
+  "same_exit_reason": 0.9918,
+  "n_paired": 485
  },
  "vs_backtest": {
-  "live_trades_with_backtest_signal": 0.9808,
+  "live_trades_with_backtest_signal": 0.9794,
   "same_side": 1.0,
   "entry_time_diff_s_median": 6.86,
   "entry_time_within_5s": 0.0,
-  "price_diff_c_mean": 2.88,
+  "price_diff_c_mean": 2.86,
   "price_diff_c_median": 1.0,
-  "price_within_1c": 0.5316,
-  "same_outcome_settled": 0.9891,
-  "n_settled": 459,
-  "n_matched": 459
+  "price_within_1c": 0.5326,
+  "same_outcome_settled": 0.9894,
+  "n_settled": 471,
+  "n_matched": 475
  },
  "execution": {
-  "n_with_fills": 468,
-  "entry_slippage_c_mean": -0.16,
+  "n_with_fills": 485,
+  "entry_slippage_c_mean": -0.14,
   "entry_slippage_c_median": 0.0,
-  "entry_slippage_within_1c": 0.562,
-  "journal_fee_c_per_ct": 1.72,
-  "kalshi_fee_c_per_ct": 1.18
+  "entry_slippage_within_1c": 0.5588,
+  "journal_fee_c_per_ct": 1.73,
+  "kalshi_fee_c_per_ct": 1.19
  },
  "cents_per_contract_same_trades": {
   "backtest (recorded quotes, live exits)": {
-   "n": 459,
-   "c_per_ct": 4.44,
+   "n": 475,
+   "c_per_ct": 4.28,
    "ci95": [
-    1.87,
-    6.83
+    1.82,
+    6.55
    ]
   },
   "paper twin (live code, paper fills)": {
-   "n": 468,
-   "c_per_ct": 1.84,
+   "n": 485,
+   "c_per_ct": 1.71,
    "ci95": [
-    -0.65,
-    4.22
+    -0.7,
+    3.92
    ]
   },
   "live journal (quoted prices)": {
-   "n": 459,
-   "c_per_ct": 1.71,
+   "n": 475,
+   "c_per_ct": 1.57,
    "ci95": [
-    -0.8,
-    4.12
+    -0.84,
+    3.8
    ]
   },
   "live real (Kalshi fills and fees)": {
-   "n": 459,
-   "c_per_ct": 2.44,
+   "n": 475,
+   "c_per_ct": 2.36,
    "ci95": [
-    -0.09,
-    4.83
+    -0.08,
+    4.62
    ]
   }
  }
