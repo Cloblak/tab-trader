@@ -1,68 +1,68 @@
 {
  "period": [
   "2026-09-12",
-  "2026-10-26"
+  "2026-10-27"
  ],
- "live_trades": 687,
- "live_days": 45,
+ "live_trades": 706,
+ "live_days": 46,
  "vs_paper_twin": {
-  "live_trades_also_taken_by_twin": 0.9927,
+  "live_trades_also_taken_by_twin": 0.9915,
   "same_side": 1.0,
-  "same_outcome": 0.9971,
-  "same_exit_reason": 0.9824,
-  "n_paired": 682
+  "same_outcome": 1.0,
+  "same_exit_reason": 0.9814,
+  "n_paired": 700
  },
  "vs_backtest": {
-  "live_trades_with_backtest_signal": 0.9811,
+  "live_trades_with_backtest_signal": 0.9816,
   "same_side": 1.0,
   "entry_time_diff_s_median": 6.84,
   "entry_time_within_5s": 0.0,
-  "price_diff_c_mean": 2.77,
+  "price_diff_c_mean": 2.73,
   "price_diff_c_median": 1.0,
-  "price_within_1c": 0.5074,
-  "same_outcome_settled": 0.9807,
-  "n_settled": 672,
-  "n_matched": 674
+  "price_within_1c": 0.5022,
+  "same_outcome_settled": 0.9811,
+  "n_settled": 689,
+  "n_matched": 693
  },
  "execution": {
-  "n_with_fills": 687,
-  "entry_slippage_c_mean": -0.09,
+  "n_with_fills": 706,
+  "entry_slippage_c_mean": -0.08,
   "entry_slippage_c_median": 0.0,
-  "entry_slippage_within_1c": 0.6492,
+  "entry_slippage_within_1c": 0.6572,
   "journal_fee_c_per_ct": 1.73,
   "kalshi_fee_c_per_ct": 1.18
  },
  "cents_per_contract_same_trades": {
   "backtest (recorded quotes, live exits)": {
-   "n": 674,
-   "c_per_ct": 4.36,
+   "n": 693,
+   "c_per_ct": 4.19,
    "ci95": [
-    2.26,
-    6.44
+    2.19,
+    6.25
    ]
   },
   "paper twin (live code, paper fills)": {
-   "n": 682,
-   "c_per_ct": 1.87,
+   "n": 700,
+   "c_per_ct": 1.7,
    "ci95": [
-    -0.27,
-    4.01
+    -0.38,
+    3.87
    ]
   },
   "live journal (quoted prices)": {
-   "n": 674,
-   "c_per_ct": 1.75,
+   "n": 693,
+   "c_per_ct": 1.6,
    "ci95": [
-    -0.4,
-    3.94
+    -0.51,
+    3.77
    ]
   },
   "live real (Kalshi fills and fees)": {
-   "n": 674,
-   "c_per_ct": 2.38,
+   "n": 693,
+   "c_per_ct": 2.22,
    "ci95": [
-    0.14,
-    4.63
+    0.02,
+    4.48
    ]
   }
  }
