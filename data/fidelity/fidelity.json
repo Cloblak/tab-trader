@@ -1,68 +1,68 @@
 {
  "period": [
   "2026-09-12",
-  "2026-11-05"
+  "2026-11-06"
  ],
- "live_trades": 872,
- "live_days": 55,
+ "live_trades": 890,
+ "live_days": 56,
  "vs_paper_twin": {
-  "live_trades_also_taken_by_twin": 0.9782,
+  "live_trades_also_taken_by_twin": 0.9764,
   "same_side": 1.0,
-  "same_outcome": 0.9988,
-  "same_exit_reason": 0.9695,
-  "n_paired": 853
+  "same_outcome": 1.0,
+  "same_exit_reason": 0.9701,
+  "n_paired": 869
  },
  "vs_backtest": {
-  "live_trades_with_backtest_signal": 0.9828,
+  "live_trades_with_backtest_signal": 0.9831,
   "same_side": 1.0,
   "entry_time_diff_s_median": 6.84,
   "entry_time_within_5s": 0.0,
-  "price_diff_c_mean": 2.72,
+  "price_diff_c_mean": 2.71,
   "price_diff_c_median": 1.0,
-  "price_within_1c": 0.4854,
-  "same_outcome_settled": 0.9801,
-  "n_settled": 854,
-  "n_matched": 857
+  "price_within_1c": 0.4857,
+  "same_outcome_settled": 0.9805,
+  "n_settled": 873,
+  "n_matched": 875
  },
  "execution": {
-  "n_with_fills": 872,
+  "n_with_fills": 890,
   "entry_slippage_c_mean": -0.05,
   "entry_slippage_c_median": 0.0,
-  "entry_slippage_within_1c": 0.7179,
+  "entry_slippage_within_1c": 0.7236,
   "journal_fee_c_per_ct": 1.75,
-  "kalshi_fee_c_per_ct": 1.19
+  "kalshi_fee_c_per_ct": 1.2
  },
  "cents_per_contract_same_trades": {
   "backtest (recorded quotes, live exits)": {
-   "n": 857,
-   "c_per_ct": 3.23,
+   "n": 875,
+   "c_per_ct": 3.24,
    "ci95": [
-    1.43,
-    5.01
+    1.47,
+    4.96
    ]
   },
   "paper twin (live code, paper fills)": {
-   "n": 853,
-   "c_per_ct": 0.77,
+   "n": 869,
+   "c_per_ct": 0.67,
    "ci95": [
-    -1.06,
-    2.61
-   ]
-  },
-  "live journal (quoted prices)": {
-   "n": 857,
-   "c_per_ct": 0.62,
-   "ci95": [
-    -1.19,
+    -1.14,
     2.45
    ]
   },
-  "live real (Kalshi fills and fees)": {
-   "n": 857,
-   "c_per_ct": 1.19,
+  "live journal (quoted prices)": {
+   "n": 875,
+   "c_per_ct": 0.55,
    "ci95": [
-    -0.74,
-    3.12
+    -1.29,
+    2.31
+   ]
+  },
+  "live real (Kalshi fills and fees)": {
+   "n": 875,
+   "c_per_ct": 1.12,
+   "ci95": [
+    -0.76,
+    2.95
    ]
   }
  }
