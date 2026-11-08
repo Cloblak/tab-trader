@@ -1,10 +1,10 @@
 {
  "first_week": "2026-05-11",
- "last_signal": "2026-11-06",
+ "last_signal": "2026-11-07",
  "context_weeks": 12,
  "weeks": 26,
- "signals": 3642,
- "live_trades": 875,
+ "signals": 3643,
+ "live_trades": 879,
  "rule": "trade iff 100*p - entry - fee > 0; flat 15% or half-Kelly capped at 15%",
  "fits": [
   {
@@ -12,14 +12,14 @@
    "model": "TabPFN-3.5",
    "n_context": 720,
    "n_test": 194,
-   "seconds": 21.7
+   "seconds": 21.9
   },
   {
    "week": "2026-05-11",
    "model": "Logistic regression",
    "n_context": 720,
    "n_test": 194,
-   "seconds": 0.1
+   "seconds": 0.0
   },
   {
    "week": "2026-05-11",
@@ -33,28 +33,28 @@
    "model": "TabPFN-3.5",
    "n_context": 914,
    "n_test": 173,
-   "seconds": 21.5
+   "seconds": 23.3
   },
   {
    "week": "2026-05-18",
    "model": "Logistic regression",
    "n_context": 914,
    "n_test": 173,
-   "seconds": 0.0
+   "seconds": 0.1
   },
   {
    "week": "2026-05-18",
    "model": "LightGBM",
    "n_context": 914,
    "n_test": 173,
-   "seconds": 0.3
+   "seconds": 0.4
   },
   {
    "week": "2026-05-25",
    "model": "TabPFN-3.5",
    "n_context": 1088,
    "n_test": 147,
-   "seconds": 24.6
+   "seconds": 27.6
   },
   {
    "week": "2026-05-25",
@@ -68,21 +68,21 @@
    "model": "LightGBM",
    "n_context": 1088,
    "n_test": 147,
-   "seconds": 0.2
+   "seconds": 0.3
   },
   {
    "week": "2026-06-01",
    "model": "TabPFN-3.5",
    "n_context": 1234,
    "n_test": 263,
-   "seconds": 32.9
+   "seconds": 34.3
   },
   {
    "week": "2026-06-01",
    "model": "Logistic regression",
    "n_context": 1234,
    "n_test": 263,
-   "seconds": 0.1
+   "seconds": 0.0
   },
   {
    "week": "2026-06-01",
@@ -96,7 +96,7 @@
    "model": "TabPFN-3.5",
    "n_context": 1497,
    "n_test": 104,
-   "seconds": 38.8
+   "seconds": 38.1
   },
   {
    "week": "2026-06-08",
@@ -117,7 +117,7 @@
    "model": "TabPFN-3.5",
    "n_context": 1602,
    "n_test": 125,
-   "seconds": 43.0
+   "seconds": 44.4
   },
   {
    "week": "2026-06-15",
@@ -138,7 +138,7 @@
    "model": "TabPFN-3.5",
    "n_context": 1727,
    "n_test": 121,
-   "seconds": 46.3
+   "seconds": 47.2
   },
   {
    "week": "2026-06-22",
@@ -159,7 +159,7 @@
    "model": "TabPFN-3.5",
    "n_context": 1847,
    "n_test": 109,
-   "seconds": 48.8
+   "seconds": 53.0
   },
   {
    "week": "2026-06-29",
@@ -173,21 +173,21 @@
    "model": "LightGBM",
    "n_context": 1847,
    "n_test": 109,
-   "seconds": 0.3
+   "seconds": 2.6
   },
   {
    "week": "2026-07-06",
    "model": "TabPFN-3.5",
    "n_context": 1956,
    "n_test": 89,
-   "seconds": 53.7
+   "seconds": 52.3
   },
   {
    "week": "2026-07-06",
    "model": "Logistic regression",
    "n_context": 1956,
    "n_test": 89,
-   "seconds": 0.1
+   "seconds": 0.0
   },
   {
    "week": "2026-07-06",
@@ -201,7 +201,7 @@
    "model": "TabPFN-3.5",
    "n_context": 1867,
    "n_test": 64,
-   "seconds": 48.6
+   "seconds": 50.0
   },
   {
    "week": "2026-07-13",
@@ -222,7 +222,7 @@
    "model": "TabPFN-3.5",
    "n_context": 1740,
    "n_test": 82,
-   "seconds": 47.3
+   "seconds": 44.9
   },
   {
    "week": "2026-07-20",
@@ -250,21 +250,21 @@
    "model": "Logistic regression",
    "n_context": 1652,
    "n_test": 90,
-   "seconds": 0.0
+   "seconds": 0.1
   },
   {
    "week": "2026-07-27",
    "model": "LightGBM",
    "n_context": 1652,
    "n_test": 90,
-   "seconds": 0.3
+   "seconds": 0.2
   },
   {
    "week": "2026-08-03",
    "model": "TabPFN-3.5",
    "n_context": 1561,
    "n_test": 78,
-   "seconds": 40.0
+   "seconds": 38.4
   },
   {
    "week": "2026-08-03",
@@ -278,14 +278,14 @@
    "model": "LightGBM",
    "n_context": 1561,
    "n_test": 78,
-   "seconds": 0.3
+   "seconds": 0.2
   },
   {
    "week": "2026-08-10",
    "model": "TabPFN-3.5",
    "n_context": 1445,
    "n_test": 65,
-   "seconds": 38.2
+   "seconds": 35.8
   },
   {
    "week": "2026-08-10",
@@ -299,14 +299,14 @@
    "model": "LightGBM",
    "n_context": 1445,
    "n_test": 65,
-   "seconds": 0.3
+   "seconds": 0.4
   },
   {
    "week": "2026-08-17",
    "model": "TabPFN-3.5",
    "n_context": 1337,
    "n_test": 108,
-   "seconds": 38.2
+   "seconds": 36.6
   },
   {
    "week": "2026-08-17",
@@ -320,14 +320,14 @@
    "model": "LightGBM",
    "n_context": 1337,
    "n_test": 108,
-   "seconds": 1.7
+   "seconds": 0.3
   },
   {
    "week": "2026-08-24",
    "model": "TabPFN-3.5",
    "n_context": 1298,
    "n_test": 177,
-   "seconds": 36.3
+   "seconds": 35.2
   },
   {
    "week": "2026-08-24",
@@ -348,58 +348,58 @@
    "model": "TabPFN-3.5",
    "n_context": 1211,
    "n_test": 179,
-   "seconds": 32.2
+   "seconds": 33.3
   },
   {
    "week": "2026-08-31",
    "model": "Logistic regression",
    "n_context": 1211,
    "n_test": 179,
+   "seconds": 0.0
+  },
+  {
+   "week": "2026-08-31",
+   "model": "LightGBM",
+   "n_context": 1211,
+   "n_test": 179,
+   "seconds": 0.3
+  },
+  {
+   "week": "2026-09-07",
+   "model": "TabPFN-3.5",
+   "n_context": 1287,
+   "n_test": 124,
+   "seconds": 35.5
+  },
+  {
+   "week": "2026-09-07",
+   "model": "Logistic regression",
+   "n_context": 1287,
+   "n_test": 124,
+   "seconds": 0.0
+  },
+  {
+   "week": "2026-09-07",
+   "model": "LightGBM",
+   "n_context": 1287,
+   "n_test": 124,
+   "seconds": 0.3
+  },
+  {
+   "week": "2026-09-14",
+   "model": "TabPFN-3.5",
+   "n_context": 1286,
+   "n_test": 196,
+   "seconds": 41.1
+  },
+  {
+   "week": "2026-09-14",
+   "model": "Logistic regression",
+   "n_context": 1286,
+   "n_test": 196,
    "seconds": 0.1
   },
   {
-   "week": "2026-08-31",
-   "model": "LightGBM",
-   "n_context": 1211,
-   "n_test": 179,
-   "seconds": 0.3
-  },
-  {
-   "week": "2026-09-07",
-   "model": "TabPFN-3.5",
-   "n_context": 1287,
-   "n_test": 124,
-   "seconds": 36.9
-  },
-  {
-   "week": "2026-09-07",
-   "model": "Logistic regression",
-   "n_context": 1287,
-   "n_test": 124,
-   "seconds": 0.0
-  },
-  {
-   "week": "2026-09-07",
-   "model": "LightGBM",
-   "n_context": 1287,
-   "n_test": 124,
-   "seconds": 0.3
-  },
-  {
-   "week": "2026-09-14",
-   "model": "TabPFN-3.5",
-   "n_context": 1286,
-   "n_test": 196,
-   "seconds": 43.2
-  },
-  {
-   "week": "2026-09-14",
-   "model": "Logistic regression",
-   "n_context": 1286,
-   "n_test": 196,
-   "seconds": 0.1
-  },
-  {
    "week": "2026-09-14",
    "model": "LightGBM",
    "n_context": 1286,
@@ -411,7 +411,7 @@
    "model": "TabPFN-3.5",
    "n_context": 1361,
    "n_test": 169,
-   "seconds": 44.3
+   "seconds": 44.0
   },
   {
    "week": "2026-09-21",
@@ -425,7 +425,7 @@
    "model": "LightGBM",
    "n_context": 1361,
    "n_test": 169,
-   "seconds": 0.3
+   "seconds": 0.2
   },
   {
    "week": "2026-09-28",
@@ -453,28 +453,28 @@
    "model": "TabPFN-3.5",
    "n_context": 1516,
    "n_test": 156,
-   "seconds": 46.7
+   "seconds": 47.5
   },
   {
    "week": "2026-10-05",
    "model": "Logistic regression",
    "n_context": 1516,
    "n_test": 156,
-   "seconds": 0.0
+   "seconds": 0.1
   },
   {
    "week": "2026-10-05",
    "model": "LightGBM",
    "n_context": 1516,
    "n_test": 156,
-   "seconds": 0.3
+   "seconds": 0.4
   },
   {
    "week": "2026-10-12",
    "model": "TabPFN-3.5",
    "n_context": 1609,
    "n_test": 176,
-   "seconds": 52.4
+   "seconds": 53.0
   },
   {
    "week": "2026-10-12",
@@ -495,14 +495,14 @@
    "model": "TabPFN-3.5",
    "n_context": 1702,
    "n_test": 152,
-   "seconds": 50.9
+   "seconds": 48.9
   },
   {
    "week": "2026-10-19",
    "model": "Logistic regression",
    "n_context": 1702,
    "n_test": 152,
-   "seconds": 0.0
+   "seconds": 0.1
   },
   {
    "week": "2026-10-19",
@@ -516,7 +516,7 @@
    "model": "TabPFN-3.5",
    "n_context": 1765,
    "n_test": 150,
-   "seconds": 52.2
+   "seconds": 51.5
   },
   {
    "week": "2026-10-26",
@@ -536,21 +536,21 @@
    "week": "2026-11-02",
    "model": "TabPFN-3.5",
    "n_context": 1836,
-   "n_test": 166,
-   "seconds": 54.7
+   "n_test": 167,
+   "seconds": 54.2
   },
   {
    "week": "2026-11-02",
    "model": "Logistic regression",
    "n_context": 1836,
-   "n_test": 166,
-   "seconds": 0.0
+   "n_test": 167,
+   "seconds": 0.1
   },
   {
    "week": "2026-11-02",
    "model": "LightGBM",
    "n_context": 1836,
-   "n_test": 166,
+   "n_test": 167,
    "seconds": 0.3
   }
  ]
