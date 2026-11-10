@@ -3,66 +3,66 @@
   "2026-09-12",
   "2026-11-09"
  ],
- "live_trades": 900,
+ "live_trades": 914,
  "live_days": 59,
  "vs_paper_twin": {
-  "live_trades_also_taken_by_twin": 0.9767,
+  "live_trades_also_taken_by_twin": 0.9759,
   "same_side": 1.0,
   "same_outcome": 1.0,
-  "same_exit_reason": 0.9704,
-  "n_paired": 879
+  "same_exit_reason": 0.9709,
+  "n_paired": 892
  },
  "vs_backtest": {
-  "live_trades_with_backtest_signal": 0.9833,
+  "live_trades_with_backtest_signal": 0.9825,
   "same_side": 1.0,
   "entry_time_diff_s_median": 6.84,
   "entry_time_within_5s": 0.0,
-  "price_diff_c_mean": 2.74,
+  "price_diff_c_mean": 2.76,
   "price_diff_c_median": 1.0,
-  "price_within_1c": 0.4847,
-  "same_outcome_settled": 0.9808,
-  "n_settled": 885,
-  "n_matched": 885
+  "price_within_1c": 0.4844,
+  "same_outcome_settled": 0.981,
+  "n_settled": 896,
+  "n_matched": 898
  },
  "execution": {
-  "n_with_fills": 900,
-  "entry_slippage_c_mean": -0.05,
+  "n_with_fills": 914,
+  "entry_slippage_c_mean": -0.06,
   "entry_slippage_c_median": 0.0,
-  "entry_slippage_within_1c": 0.7267,
-  "journal_fee_c_per_ct": 1.75,
+  "entry_slippage_within_1c": 0.7298,
+  "journal_fee_c_per_ct": 1.74,
   "kalshi_fee_c_per_ct": 1.19
  },
  "cents_per_contract_same_trades": {
   "backtest (recorded quotes, live exits)": {
-   "n": 885,
-   "c_per_ct": 3.38,
+   "n": 898,
+   "c_per_ct": 3.19,
    "ci95": [
-    1.69,
-    5.1
+    1.51,
+    4.87
    ]
   },
   "paper twin (live code, paper fills)": {
-   "n": 879,
-   "c_per_ct": 0.77,
+   "n": 892,
+   "c_per_ct": 0.59,
    "ci95": [
-    -0.98,
-    2.59
+    -1.17,
+    2.41
    ]
   },
   "live journal (quoted prices)": {
-   "n": 885,
-   "c_per_ct": 0.65,
+   "n": 898,
+   "c_per_ct": 0.47,
    "ci95": [
-    -1.11,
-    2.46
+    -1.28,
+    2.27
    ]
   },
   "live real (Kalshi fills and fees)": {
-   "n": 885,
-   "c_per_ct": 1.22,
+   "n": 898,
+   "c_per_ct": 1.03,
    "ci95": [
-    -0.61,
-    3.07
+    -0.78,
+    2.89
    ]
   }
  }
