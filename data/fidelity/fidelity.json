@@ -1,68 +1,68 @@
 {
  "period": [
   "2026-09-12",
-  "2026-11-09"
+  "2026-11-11"
  ],
- "live_trades": 914,
- "live_days": 59,
+ "live_trades": 932,
+ "live_days": 61,
  "vs_paper_twin": {
-  "live_trades_also_taken_by_twin": 0.9759,
+  "live_trades_also_taken_by_twin": 0.9753,
   "same_side": 1.0,
   "same_outcome": 1.0,
-  "same_exit_reason": 0.9709,
-  "n_paired": 892
+  "same_exit_reason": 0.9714,
+  "n_paired": 909
  },
  "vs_backtest": {
-  "live_trades_with_backtest_signal": 0.9825,
+  "live_trades_with_backtest_signal": 0.9828,
   "same_side": 1.0,
-  "entry_time_diff_s_median": 6.84,
+  "entry_time_diff_s_median": 6.83,
   "entry_time_within_5s": 0.0,
-  "price_diff_c_mean": 2.76,
+  "price_diff_c_mean": 2.72,
   "price_diff_c_median": 1.0,
-  "price_within_1c": 0.4844,
-  "same_outcome_settled": 0.981,
-  "n_settled": 896,
-  "n_matched": 898
+  "price_within_1c": 0.4858,
+  "same_outcome_settled": 0.9814,
+  "n_settled": 912,
+  "n_matched": 916
  },
  "execution": {
-  "n_with_fills": 914,
-  "entry_slippage_c_mean": -0.06,
+  "n_with_fills": 932,
+  "entry_slippage_c_mean": -0.05,
   "entry_slippage_c_median": 0.0,
-  "entry_slippage_within_1c": 0.7298,
+  "entry_slippage_within_1c": 0.7339,
   "journal_fee_c_per_ct": 1.74,
-  "kalshi_fee_c_per_ct": 1.19
+  "kalshi_fee_c_per_ct": 1.18
  },
  "cents_per_contract_same_trades": {
   "backtest (recorded quotes, live exits)": {
-   "n": 898,
-   "c_per_ct": 3.19,
+   "n": 916,
+   "c_per_ct": 3.08,
    "ci95": [
-    1.51,
-    4.87
+    1.39,
+    4.79
    ]
   },
   "paper twin (live code, paper fills)": {
-   "n": 892,
-   "c_per_ct": 0.59,
+   "n": 909,
+   "c_per_ct": 0.5,
    "ci95": [
-    -1.17,
-    2.41
+    -1.29,
+    2.26
    ]
   },
   "live journal (quoted prices)": {
-   "n": 898,
-   "c_per_ct": 0.47,
+   "n": 916,
+   "c_per_ct": 0.39,
    "ci95": [
-    -1.28,
-    2.27
+    -1.4,
+    2.16
    ]
   },
   "live real (Kalshi fills and fees)": {
-   "n": 898,
-   "c_per_ct": 1.03,
+   "n": 916,
+   "c_per_ct": 0.96,
    "ci95": [
-    -0.78,
-    2.89
+    -0.89,
+    2.78
    ]
   }
  }
