@@ -1,10 +1,10 @@
 {
  "first_week": "2026-05-11",
- "last_signal": "2026-11-16",
+ "last_signal": "2026-11-17",
  "context_weeks": 12,
  "weeks": 28,
- "signals": 3875,
- "live_trades": 948,
+ "signals": 3908,
+ "live_trades": 951,
  "rule": "trade iff 100*p - entry - fee > 0; flat 15% or half-Kelly capped at 15%",
  "fits": [
   {
@@ -12,14 +12,14 @@
    "model": "TabPFN-3.5",
    "n_context": 720,
    "n_test": 194,
-   "seconds": 28.5
+   "seconds": 25.3
   },
   {
    "week": "2026-05-11",
    "model": "Logistic regression",
    "n_context": 720,
    "n_test": 194,
-   "seconds": 0.1
+   "seconds": 0.0
   },
   {
    "week": "2026-05-11",
@@ -33,14 +33,14 @@
    "model": "TabPFN-3.5",
    "n_context": 914,
    "n_test": 173,
-   "seconds": 28.8
+   "seconds": 28.2
   },
   {
    "week": "2026-05-18",
    "model": "Logistic regression",
    "n_context": 914,
    "n_test": 173,
-   "seconds": 0.1
+   "seconds": 0.0
   },
   {
    "week": "2026-05-18",
@@ -54,7 +54,7 @@
    "model": "TabPFN-3.5",
    "n_context": 1088,
    "n_test": 147,
-   "seconds": 39.3
+   "seconds": 38.8
   },
   {
    "week": "2026-05-25",
@@ -75,7 +75,7 @@
    "model": "TabPFN-3.5",
    "n_context": 1234,
    "n_test": 263,
-   "seconds": 46.5
+   "seconds": 45.5
   },
   {
    "week": "2026-06-01",
@@ -89,14 +89,14 @@
    "model": "LightGBM",
    "n_context": 1234,
    "n_test": 263,
-   "seconds": 0.3
+   "seconds": 0.4
   },
   {
    "week": "2026-06-08",
    "model": "TabPFN-3.5",
    "n_context": 1497,
    "n_test": 104,
-   "seconds": 39.7
+   "seconds": 62.2
   },
   {
    "week": "2026-06-08",
@@ -110,14 +110,14 @@
    "model": "LightGBM",
    "n_context": 1497,
    "n_test": 104,
-   "seconds": 0.3
+   "seconds": 0.4
   },
   {
    "week": "2026-06-15",
    "model": "TabPFN-3.5",
    "n_context": 1602,
    "n_test": 125,
-   "seconds": 45.6
+   "seconds": 50.6
   },
   {
    "week": "2026-06-15",
@@ -131,329 +131,329 @@
    "model": "LightGBM",
    "n_context": 1602,
    "n_test": 125,
-   "seconds": 0.3
+   "seconds": 0.4
   },
   {
    "week": "2026-06-22",
    "model": "TabPFN-3.5",
    "n_context": 1727,
    "n_test": 121,
-   "seconds": 56.6
+   "seconds": 56.7
   },
   {
    "week": "2026-06-22",
    "model": "Logistic regression",
    "n_context": 1727,
    "n_test": 121,
-   "seconds": 0.1
+   "seconds": 0.0
   },
   {
    "week": "2026-06-22",
    "model": "LightGBM",
    "n_context": 1727,
    "n_test": 121,
-   "seconds": 0.3
-  },
-  {
-   "week": "2026-06-29",
-   "model": "TabPFN-3.5",
-   "n_context": 1847,
-   "n_test": 109,
-   "seconds": 60.5
-  },
-  {
-   "week": "2026-06-29",
-   "model": "Logistic regression",
-   "n_context": 1847,
-   "n_test": 109,
-   "seconds": 0.1
-  },
-  {
-   "week": "2026-06-29",
-   "model": "LightGBM",
-   "n_context": 1847,
-   "n_test": 109,
-   "seconds": 0.3
-  },
-  {
-   "week": "2026-07-06",
-   "model": "TabPFN-3.5",
-   "n_context": 1956,
-   "n_test": 89,
-   "seconds": 65.2
-  },
-  {
-   "week": "2026-07-06",
-   "model": "Logistic regression",
-   "n_context": 1956,
-   "n_test": 89,
-   "seconds": 0.0
-  },
-  {
-   "week": "2026-07-06",
-   "model": "LightGBM",
-   "n_context": 1956,
-   "n_test": 89,
-   "seconds": 0.4
-  },
-  {
-   "week": "2026-07-13",
-   "model": "TabPFN-3.5",
-   "n_context": 1867,
-   "n_test": 64,
-   "seconds": 62.1
-  },
-  {
-   "week": "2026-07-13",
-   "model": "Logistic regression",
-   "n_context": 1867,
-   "n_test": 64,
-   "seconds": 0.1
-  },
-  {
-   "week": "2026-07-13",
-   "model": "LightGBM",
-   "n_context": 1867,
-   "n_test": 64,
-   "seconds": 0.4
-  },
-  {
-   "week": "2026-07-20",
-   "model": "TabPFN-3.5",
-   "n_context": 1740,
-   "n_test": 82,
-   "seconds": 58.2
-  },
-  {
-   "week": "2026-07-20",
-   "model": "Logistic regression",
-   "n_context": 1740,
-   "n_test": 82,
-   "seconds": 0.1
-  },
-  {
-   "week": "2026-07-20",
-   "model": "LightGBM",
-   "n_context": 1740,
-   "n_test": 82,
-   "seconds": 0.3
-  },
-  {
-   "week": "2026-07-27",
-   "model": "TabPFN-3.5",
-   "n_context": 1652,
-   "n_test": 90,
-   "seconds": 54.7
-  },
-  {
-   "week": "2026-07-27",
-   "model": "Logistic regression",
-   "n_context": 1652,
-   "n_test": 90,
-   "seconds": 0.0
-  },
-  {
-   "week": "2026-07-27",
-   "model": "LightGBM",
-   "n_context": 1652,
-   "n_test": 90,
-   "seconds": 0.3
-  },
-  {
-   "week": "2026-08-03",
-   "model": "TabPFN-3.5",
-   "n_context": 1561,
-   "n_test": 78,
-   "seconds": 48.9
-  },
-  {
-   "week": "2026-08-03",
-   "model": "Logistic regression",
-   "n_context": 1561,
-   "n_test": 78,
-   "seconds": 0.0
-  },
-  {
-   "week": "2026-08-03",
-   "model": "LightGBM",
-   "n_context": 1561,
-   "n_test": 78,
-   "seconds": 0.3
-  },
-  {
-   "week": "2026-08-10",
-   "model": "TabPFN-3.5",
-   "n_context": 1445,
-   "n_test": 65,
-   "seconds": 45.1
-  },
-  {
-   "week": "2026-08-10",
-   "model": "Logistic regression",
-   "n_context": 1445,
-   "n_test": 65,
-   "seconds": 0.0
-  },
-  {
-   "week": "2026-08-10",
-   "model": "LightGBM",
-   "n_context": 1445,
-   "n_test": 65,
-   "seconds": 0.3
-  },
-  {
-   "week": "2026-08-17",
-   "model": "TabPFN-3.5",
-   "n_context": 1337,
-   "n_test": 108,
-   "seconds": 39.7
-  },
-  {
-   "week": "2026-08-17",
-   "model": "Logistic regression",
-   "n_context": 1337,
-   "n_test": 108,
-   "seconds": 0.0
-  },
-  {
-   "week": "2026-08-17",
-   "model": "LightGBM",
-   "n_context": 1337,
-   "n_test": 108,
-   "seconds": 0.4
-  },
-  {
-   "week": "2026-08-24",
-   "model": "TabPFN-3.5",
-   "n_context": 1298,
-   "n_test": 177,
-   "seconds": 40.6
-  },
-  {
-   "week": "2026-08-24",
-   "model": "Logistic regression",
-   "n_context": 1298,
-   "n_test": 177,
-   "seconds": 0.0
-  },
-  {
-   "week": "2026-08-24",
-   "model": "LightGBM",
-   "n_context": 1298,
-   "n_test": 177,
-   "seconds": 0.3
-  },
-  {
-   "week": "2026-08-31",
-   "model": "TabPFN-3.5",
-   "n_context": 1211,
-   "n_test": 179,
-   "seconds": 38.6
-  },
-  {
-   "week": "2026-08-31",
-   "model": "Logistic regression",
-   "n_context": 1211,
-   "n_test": 179,
-   "seconds": 0.0
-  },
-  {
-   "week": "2026-08-31",
-   "model": "LightGBM",
-   "n_context": 1211,
-   "n_test": 179,
-   "seconds": 0.3
-  },
-  {
-   "week": "2026-09-07",
-   "model": "TabPFN-3.5",
-   "n_context": 1287,
-   "n_test": 124,
-   "seconds": 40.1
-  },
-  {
-   "week": "2026-09-07",
-   "model": "Logistic regression",
-   "n_context": 1287,
-   "n_test": 124,
-   "seconds": 0.0
-  },
-  {
-   "week": "2026-09-07",
-   "model": "LightGBM",
-   "n_context": 1287,
-   "n_test": 124,
-   "seconds": 0.3
-  },
-  {
-   "week": "2026-09-14",
-   "model": "TabPFN-3.5",
-   "n_context": 1286,
-   "n_test": 196,
-   "seconds": 44.0
-  },
-  {
-   "week": "2026-09-14",
-   "model": "Logistic regression",
-   "n_context": 1286,
-   "n_test": 196,
-   "seconds": 0.1
-  },
-  {
-   "week": "2026-09-14",
-   "model": "LightGBM",
-   "n_context": 1286,
-   "n_test": 196,
-   "seconds": 0.4
-  },
-  {
-   "week": "2026-09-21",
-   "model": "TabPFN-3.5",
-   "n_context": 1361,
-   "n_test": 169,
-   "seconds": 48.2
-  },
-  {
-   "week": "2026-09-21",
-   "model": "Logistic regression",
-   "n_context": 1361,
-   "n_test": 169,
-   "seconds": 0.1
-  },
-  {
-   "week": "2026-09-21",
-   "model": "LightGBM",
-   "n_context": 1361,
-   "n_test": 169,
-   "seconds": 0.4
-  },
-  {
-   "week": "2026-09-28",
-   "model": "TabPFN-3.5",
-   "n_context": 1420,
-   "n_test": 185,
-   "seconds": 51.6
-  },
-  {
-   "week": "2026-09-28",
-   "model": "Logistic regression",
-   "n_context": 1420,
-   "n_test": 185,
-   "seconds": 0.1
-  },
-  {
-   "week": "2026-09-28",
-   "model": "LightGBM",
-   "n_context": 1420,
-   "n_test": 185,
    "seconds": 0.5
   },
   {
+   "week": "2026-06-29",
+   "model": "TabPFN-3.5",
+   "n_context": 1847,
+   "n_test": 109,
+   "seconds": 58.7
+  },
+  {
+   "week": "2026-06-29",
+   "model": "Logistic regression",
+   "n_context": 1847,
+   "n_test": 109,
+   "seconds": 0.1
+  },
+  {
+   "week": "2026-06-29",
+   "model": "LightGBM",
+   "n_context": 1847,
+   "n_test": 109,
+   "seconds": 0.3
+  },
+  {
+   "week": "2026-07-06",
+   "model": "TabPFN-3.5",
+   "n_context": 1956,
+   "n_test": 89,
+   "seconds": 61.2
+  },
+  {
+   "week": "2026-07-06",
+   "model": "Logistic regression",
+   "n_context": 1956,
+   "n_test": 89,
+   "seconds": 0.0
+  },
+  {
+   "week": "2026-07-06",
+   "model": "LightGBM",
+   "n_context": 1956,
+   "n_test": 89,
+   "seconds": 0.3
+  },
+  {
+   "week": "2026-07-13",
+   "model": "TabPFN-3.5",
+   "n_context": 1867,
+   "n_test": 64,
+   "seconds": 59.2
+  },
+  {
+   "week": "2026-07-13",
+   "model": "Logistic regression",
+   "n_context": 1867,
+   "n_test": 64,
+   "seconds": 0.0
+  },
+  {
+   "week": "2026-07-13",
+   "model": "LightGBM",
+   "n_context": 1867,
+   "n_test": 64,
+   "seconds": 0.3
+  },
+  {
+   "week": "2026-07-20",
+   "model": "TabPFN-3.5",
+   "n_context": 1740,
+   "n_test": 82,
+   "seconds": 58.8
+  },
+  {
+   "week": "2026-07-20",
+   "model": "Logistic regression",
+   "n_context": 1740,
+   "n_test": 82,
+   "seconds": 0.0
+  },
+  {
+   "week": "2026-07-20",
+   "model": "LightGBM",
+   "n_context": 1740,
+   "n_test": 82,
+   "seconds": 0.3
+  },
+  {
+   "week": "2026-07-27",
+   "model": "TabPFN-3.5",
+   "n_context": 1652,
+   "n_test": 90,
+   "seconds": 49.6
+  },
+  {
+   "week": "2026-07-27",
+   "model": "Logistic regression",
+   "n_context": 1652,
+   "n_test": 90,
+   "seconds": 0.0
+  },
+  {
+   "week": "2026-07-27",
+   "model": "LightGBM",
+   "n_context": 1652,
+   "n_test": 90,
+   "seconds": 0.3
+  },
+  {
+   "week": "2026-08-03",
+   "model": "TabPFN-3.5",
+   "n_context": 1561,
+   "n_test": 78,
+   "seconds": 47.5
+  },
+  {
+   "week": "2026-08-03",
+   "model": "Logistic regression",
+   "n_context": 1561,
+   "n_test": 78,
+   "seconds": 0.0
+  },
+  {
+   "week": "2026-08-03",
+   "model": "LightGBM",
+   "n_context": 1561,
+   "n_test": 78,
+   "seconds": 0.3
+  },
+  {
+   "week": "2026-08-10",
+   "model": "TabPFN-3.5",
+   "n_context": 1445,
+   "n_test": 65,
+   "seconds": 46.4
+  },
+  {
+   "week": "2026-08-10",
+   "model": "Logistic regression",
+   "n_context": 1445,
+   "n_test": 65,
+   "seconds": 0.0
+  },
+  {
+   "week": "2026-08-10",
+   "model": "LightGBM",
+   "n_context": 1445,
+   "n_test": 65,
+   "seconds": 0.3
+  },
+  {
+   "week": "2026-08-17",
+   "model": "TabPFN-3.5",
+   "n_context": 1337,
+   "n_test": 108,
+   "seconds": 40.4
+  },
+  {
+   "week": "2026-08-17",
+   "model": "Logistic regression",
+   "n_context": 1337,
+   "n_test": 108,
+   "seconds": 0.0
+  },
+  {
+   "week": "2026-08-17",
+   "model": "LightGBM",
+   "n_context": 1337,
+   "n_test": 108,
+   "seconds": 0.3
+  },
+  {
+   "week": "2026-08-24",
+   "model": "TabPFN-3.5",
+   "n_context": 1298,
+   "n_test": 177,
+   "seconds": 40.8
+  },
+  {
+   "week": "2026-08-24",
+   "model": "Logistic regression",
+   "n_context": 1298,
+   "n_test": 177,
+   "seconds": 0.0
+  },
+  {
+   "week": "2026-08-24",
+   "model": "LightGBM",
+   "n_context": 1298,
+   "n_test": 177,
+   "seconds": 0.3
+  },
+  {
+   "week": "2026-08-31",
+   "model": "TabPFN-3.5",
+   "n_context": 1211,
+   "n_test": 179,
+   "seconds": 39.5
+  },
+  {
+   "week": "2026-08-31",
+   "model": "Logistic regression",
+   "n_context": 1211,
+   "n_test": 179,
+   "seconds": 0.0
+  },
+  {
+   "week": "2026-08-31",
+   "model": "LightGBM",
+   "n_context": 1211,
+   "n_test": 179,
+   "seconds": 0.3
+  },
+  {
+   "week": "2026-09-07",
+   "model": "TabPFN-3.5",
+   "n_context": 1287,
+   "n_test": 124,
+   "seconds": 43.3
+  },
+  {
+   "week": "2026-09-07",
+   "model": "Logistic regression",
+   "n_context": 1287,
+   "n_test": 124,
+   "seconds": 0.1
+  },
+  {
+   "week": "2026-09-07",
+   "model": "LightGBM",
+   "n_context": 1287,
+   "n_test": 124,
+   "seconds": 0.3
+  },
+  {
+   "week": "2026-09-14",
+   "model": "TabPFN-3.5",
+   "n_context": 1286,
+   "n_test": 196,
+   "seconds": 48.7
+  },
+  {
+   "week": "2026-09-14",
+   "model": "Logistic regression",
+   "n_context": 1286,
+   "n_test": 196,
+   "seconds": 0.0
+  },
+  {
+   "week": "2026-09-14",
+   "model": "LightGBM",
+   "n_context": 1286,
+   "n_test": 196,
+   "seconds": 0.3
+  },
+  {
+   "week": "2026-09-21",
+   "model": "TabPFN-3.5",
+   "n_context": 1361,
+   "n_test": 169,
+   "seconds": 52.6
+  },
+  {
+   "week": "2026-09-21",
+   "model": "Logistic regression",
+   "n_context": 1361,
+   "n_test": 169,
+   "seconds": 0.0
+  },
+  {
+   "week": "2026-09-21",
+   "model": "LightGBM",
+   "n_context": 1361,
+   "n_test": 169,
+   "seconds": 0.3
+  },
+  {
+   "week": "2026-09-28",
+   "model": "TabPFN-3.5",
+   "n_context": 1420,
+   "n_test": 185,
+   "seconds": 57.6
+  },
+  {
+   "week": "2026-09-28",
+   "model": "Logistic regression",
+   "n_context": 1420,
+   "n_test": 185,
+   "seconds": 0.0
+  },
+  {
+   "week": "2026-09-28",
+   "model": "LightGBM",
+   "n_context": 1420,
+   "n_test": 185,
+   "seconds": 0.6
+  },
+  {
    "week": "2026-10-05",
    "model": "TabPFN-3.5",
    "n_context": 1516,
    "n_test": 156,
-   "seconds": 61.3
+   "seconds": 71.9
   },
   {
    "week": "2026-10-05",
@@ -467,14 +467,14 @@
    "model": "LightGBM",
    "n_context": 1516,
    "n_test": 156,
-   "seconds": 0.3
+   "seconds": 0.5
   },
   {
    "week": "2026-10-12",
    "model": "TabPFN-3.5",
    "n_context": 1609,
    "n_test": 176,
-   "seconds": 49.3
+   "seconds": 51.3
   },
   {
    "week": "2026-10-12",
@@ -495,7 +495,7 @@
    "model": "TabPFN-3.5",
    "n_context": 1702,
    "n_test": 152,
-   "seconds": 58.7
+   "seconds": 56.3
   },
   {
    "week": "2026-10-19",
@@ -509,14 +509,14 @@
    "model": "LightGBM",
    "n_context": 1702,
    "n_test": 152,
-   "seconds": 0.3
+   "seconds": 0.4
   },
   {
    "week": "2026-10-26",
    "model": "TabPFN-3.5",
    "n_context": 1765,
    "n_test": 150,
-   "seconds": 60.8
+   "seconds": 62.8
   },
   {
    "week": "2026-10-26",
@@ -537,7 +537,7 @@
    "model": "TabPFN-3.5",
    "n_context": 1836,
    "n_test": 172,
-   "seconds": 65.5
+   "seconds": 63.5
   },
   {
    "week": "2026-11-02",
@@ -557,42 +557,42 @@
    "week": "2026-11-09",
    "model": "TabPFN-3.5",
    "n_context": 1943,
-   "n_test": 224,
-   "seconds": 75.9
+   "n_test": 219,
+   "seconds": 71.6
   },
   {
    "week": "2026-11-09",
    "model": "Logistic regression",
    "n_context": 1943,
-   "n_test": 224,
+   "n_test": 219,
    "seconds": 0.0
   },
   {
    "week": "2026-11-09",
    "model": "LightGBM",
    "n_context": 1943,
-   "n_test": 224,
+   "n_test": 219,
    "seconds": 0.4
   },
   {
    "week": "2026-11-16",
    "model": "TabPFN-3.5",
-   "n_context": 2059,
-   "n_test": 3,
-   "seconds": 69.3
+   "n_context": 2054,
+   "n_test": 41,
+   "seconds": 73.4
   },
   {
    "week": "2026-11-16",
    "model": "Logistic regression",
-   "n_context": 2059,
-   "n_test": 3,
-   "seconds": 0.0
+   "n_context": 2054,
+   "n_test": 41,
+   "seconds": 0.1
   },
   {
    "week": "2026-11-16",
    "model": "LightGBM",
-   "n_context": 2059,
-   "n_test": 3,
+   "n_context": 2054,
+   "n_test": 41,
    "seconds": 0.4
   }
  ]
